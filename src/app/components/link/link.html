@@ -1,0 +1,49 @@
+<div class="relative" >
+  <a
+    matRipple
+    matRippleColor="#c9c9c924"
+    [href]="quickLink()!.url"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-center relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5"
+  >
+    <div
+      class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5"
+    >
+      <img
+        [src]="'https://www.google.com/s2/favicons?domain=' + quickLink()!.url"
+        [alt]="quickLink()!.name"
+        loading="lazy"
+      />
+    </div>
+    <p class="text-center text-white absolute py-2 bottom-0">
+      {{ quickLink()!.name }}
+    </p>
+  </a>
+  <div class="absolute top-1 right-1 z-10">
+    <button matIconButton [matMenuTriggerFor]="menu">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-dots-vertical"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="edit()">Edit shortcut</button>
+  <button mat-menu-item (click)="remove()">Remove</button>
+</mat-menu>

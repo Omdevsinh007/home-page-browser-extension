@@ -1,0 +1,31 @@
+<h2 class="!text-white" mat-dialog-title>
+  {{ data ? 'Edit Shortcut' : 'Add Shortcut' }}
+</h2>
+<div class="">
+  <form [formGroup]="shortcutForm">
+    <div class="flex items-center flex-col gap-5 p-6">
+      <mat-form-field class="w-full">
+        <mat-label id="name" class="" >Name</mat-label>
+        <input matInput type="text" for="name" formControlName="name"/>
+        @if(shortcutForm.hasError('whitespace') || shortcutForm.hasError('required')) {
+          <mat-error>
+            This field is required!
+          </mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field class="w-full">
+        <mat-label id="url" class="" >URL</mat-label>
+        <input matInput type="text" for="url" formControlName="url"/>
+        @if(shortcutForm.hasError('whitespace') || shortcutForm.hasError('required')) {
+          <mat-error>
+            This field is required!
+          </mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </form>
+</div>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+  <button mat-flat-button [disabled]="shortcutForm.invalid" (click)="addShortcut()" >{{ data ? 'Update' : 'Save'}}</button>
+</mat-dialog-actions>

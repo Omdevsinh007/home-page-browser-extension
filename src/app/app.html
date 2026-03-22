@@ -1,0 +1,136 @@
+<div class="content-wrap">
+  @if ((activeVideo$ | async)?.type === 'video') {
+    <video
+        #mainVideo
+        [src]="(activeVideo$ | async)?.dataUrl || ''"
+        [style.object-fit]="(activeVideo$ | async)?.objectFit || 'cover'"
+        [style.filter]="'brightness(' + ((activeVideo$ | async)?.brightness ?? 100) + '%) blur(' + ((activeVideo$ | async)?.blur ?? 0) + 'px)'"
+        autoplay
+        loop
+        muted
+        playsinline
+        disablePictureInPicture
+        class="video">
+    </video>
+  } @else if ((activeVideo$ | async)?.type === 'image') {
+    <img
+        #mainImage
+        [src]="(activeVideo$ | async)?.dataUrl || ''"
+        [style.object-fit]="(activeVideo$ | async)?.objectFit || 'cover'"
+        [style.filter]="'brightness(' + ((activeVideo$ | async)?.brightness ?? 100) + '%) blur(' + ((activeVideo$ | async)?.blur ?? 0) + 'px)'"
+        (load)="onImageLoad($event)"
+        class="video">
+  }
+
+  <div class="container w-full z-10">
+    <div class="flex flex-wrap" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
+      @if(linksData() && linksData()!.length > 0) {
+        @for (link of linksData(); track $index) {
+          <div class="!p-4" cdkDrag>
+            <div class="custom-shortcut-placeholder rounded-md m-4" *cdkDragPlaceholder>
+              <div class="w-28 rounded-md" >
+              </div>
+            </div>
+            @if(link && link.type === "Shortcut") {
+              <app-link [quickLink]="link" (removeShortcut)="removeShortcut($event)" (editShortcut)="editShortcut($event)" />
+            }
+            @if(link && link.type === "Group") {
+              <app-group-link [quickLink]="link" (click)="openShortcutGroup(link)" (removeLink)="removeShortcut($event)" />
+            }
+          </div>
+        }
+      }
+      <div class="py-4">
+        <div class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95">
+          <div matRipple class="w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-white/20 transition-all duration-300 shadow-sm" [matMenuTriggerFor]="menu">
+            <mat-icon class="!text-white" >add</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Management Floating Button -->
+  <div colorDecoder [style.color]="iconColor()" class="absolute bottom-6 right-6 z-50"  [autoApply]="true">
+    <button (click)="toggleVideoMenu()" class="glass-button hover:cursor-pointer w-12 h-12 rounded-full flex justify-center items-center group transition-all hover:scale-110">
+      <mat-icon class="text-white group-hover:rotate-12 transition-transform">wallpaper</mat-icon>
+    </button>
+  </div>
+
+  <!-- Video Management Menu -->
+  @if (isVideoMenuOpen()) {
+    <div class="absolute bottom-20 right-6 z-50 w-80 glass-panel rounded-2xl p-5 flex flex-col gap-4 text-white shadow-2xl origin-bottom-right transition-all">
+      <div class="flex justify-between items-center border-b border-white/20 pb-3">
+        <h3 class="text-lg font-medium flex items-center gap-2"><mat-icon class="text-sm">wallpaper</mat-icon> Backgrounds</h3>
+        <button (click)="toggleVideoMenu()" class="hover:bg-white/10 hover:cursor-pointer size-12 flex justify-center items-center rounded-full p-1 transition-colors">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="video-list flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+        @for (video of (videos$ | async); track video.id) {
+          <div class="flex flex-col gap-2 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent"
+               [class.!border-white]="video.isActive" [class.!bg-white/10]="video.isActive">
+
+            <div class="flex items-center justify-between cursor-pointer" (click)="selectVideo(video.id)">
+              <div class="flex items-center gap-2 overflow-hidden">
+                @if (video.isActive) {
+                  <mat-icon class="text-green-400 !w-6 !h-6 text-sm shrink-0">check_circle</mat-icon>
+                } @else {
+                  <mat-icon class="text-white/40 !w-6 !h-6 text-sm shrink-0">radio_button_unchecked</mat-icon>
+                }
+                <span class="truncate text-sm font-medium" [title]="video.name">{{ video.name }}</span>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0 z-10">
+                 <button (click)="deleteVideo(video.id, $event)" class="text-white/50 hover:text-red-400 p-1 flex justify-center items-center hover:cursor-pointer size-10 rounded-full hover:bg-white/10 transition-colors" title="Delete">
+                   <mat-icon class="text-sm">delete_outline</mat-icon>
+                 </button>
+              </div>
+            </div>
+
+            <!-- Settings (only visible for active video) -->
+            @if (video.isActive) {
+              <div class="pt-3 pb-1 border-t border-white/10 flex flex-col gap-3 mt-1">
+
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Image Fit</span>
+                  <div class="flex bg-black/20 p-1 rounded-lg gap-1">
+                    <button class="flex-1 text-xs py-1 rounded-md hover:cursor-pointer transition-colors" [class.bg-white/20]="video.objectFit === 'cover' || !video.objectFit" (click)="updateSettings({objectFit: 'cover'})">Cover</button>
+                    <button class="flex-1 text-xs py-1 rounded-md hover:cursor-pointer transition-colors" [class.bg-white/20]="video.objectFit === 'contain'" (click)="updateSettings({objectFit: 'contain'})">Contain</button>
+                    <button class="flex-1 text-xs py-1 rounded-md hover:cursor-pointer transition-colors" [class.bg-white/20]="video.objectFit === 'fill'" (click)="updateSettings({objectFit: 'fill'})">Fill</button>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                   <div class="flex justify-between items-center"><span class="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Brightness</span><span class="text-[10px]">{{ video.brightness ?? 100 }}%</span></div>
+                   <input type="range" class="w-full accent-white" min="10" max="200" [value]="video.brightness ?? 100" (input)="onBrightnessChange($event)">
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                   <div class="flex justify-between items-center"><span class="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Blur Effect</span><span class="text-[10px]">{{ video.blur ?? 0 }}px</span></div>
+                   <input type="range" class="w-full accent-white" min="0" max="20" [value]="video.blur ?? 0" (input)="onBlurChange($event)">
+                </div>
+
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="mt-1 pt-3 border-t border-white/10 text-center">
+        <label class="glass-button w-full py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2 hover:bg-white/20 transition-all font-medium text-sm">
+          <mat-icon class="text-sm">upload_file</mat-icon>
+          Upload New Background
+          <input type="file" accept="video/*,image/*" class="hidden" (change)="onVideoUploaded($event)">
+        </label>
+        <p class="text-[10px] text-white/50 mt-3 leading-tight">Limit: 3 backgrounds. One background must remain active. Stored securely in your browser.</p>
+      </div>
+    </div>
+  }
+</div>
+
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="addShortcut()" >Add shortcut</button>
+  <button mat-menu-item (click)="addGroup()" >Add group</button>
+</mat-menu>

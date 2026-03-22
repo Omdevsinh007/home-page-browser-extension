@@ -1,0 +1,27 @@
+<div class="relative select-none" >
+  <div
+    matRipple
+    matRippleColor="#c9c9c924"
+    class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 flex-wrap rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-start p-3.5 relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5"
+  >
+  @for (link of quickLink()?.group?.slice(0, 4); track $index) {
+    <div class="w-1/2 flex justify-center items-center" >
+      <div
+        class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5"
+      >
+        <img
+          [src]="'https://www.google.com/s2/favicons?domain=' + link.url"
+        />
+      </div>
+    </div>
+    }
+    <p class="text-center text-white absolute py-2 bottom-0">
+      {{ quickLink()!.name }}
+    </p>
+  </div>
+</div>
+
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="editShortcut()" >Edit shortcut</button>
+  <button mat-menu-item (click)="removeShortcut()" >Remove</button>
+</mat-menu>

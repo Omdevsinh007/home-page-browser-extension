@@ -1,0 +1,58 @@
+<div mat-dialog-title class="!text-white flex justify-between relative" >
+  {{ shortcutData().name }}
+  <div class="absolute top-6 right-10 z-10 cursor-pointer">
+    <button class="cursor-pointer" matIconButton [matMenuTriggerFor]="editMenu">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-dots-vertical"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+      </svg>
+    </button>
+  </div>
+</div>
+<mat-dialog-content class="custom-scroll relative" >
+  <div class="flex flex-wrap px-6 select-none" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
+    @if(shortcutData() && shortcutData().group!.length > 0) {
+      @for (link of shortcutData().group!; track $index) {
+        <div class="p-4" cdkDrag>
+          <div class="custom-shortcut-placeholder rounded-md m-4" *cdkDragPlaceholder>
+            <div class="w-28 rounded-md" >
+            </div>
+          </div>
+          <app-link [quickLink]="link" [index]="$index" (editIndex)="editShortcut($event)" (removeShortcut)="removeShortcut($event)" />
+        </div>
+      }
+    }
+    <div class="py-4">
+      <div class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5">
+        <div matRipple class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5" [matMenuTriggerFor]="menu">
+          <mat-icon class="!text-white" >add</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton color="warn" (click)="closeGroup()" >Close</button>
+</mat-dialog-actions>
+
+<mat-menu #menu="matMenu">
+  <button mat-menu-item (click)="addShortcut()" >Add shortcut</button>
+</mat-menu>
+
+<mat-menu #editMenu="matMenu">
+  <button mat-menu-item (click)="editGroup()" >Edit Name</button>
+  <button mat-menu-item (click)="removeGroup(shortcutData().id)" >Remove Group</button>
+</mat-menu>

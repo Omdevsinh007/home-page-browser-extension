@@ -1,0 +1,14 @@
+<h2 mat-dialog-title class="!text-white" >Enter the group name</h2>
+<div class="w-full text-center mx-auto px-6">
+  <mat-form-field class="w-full" appearance="outline" >
+    <input matInput class="!text-white placeholder:cursor-pointer" placeholder="Enter Group name" [(ngModel)]="groupName"/>
+  </mat-form-field>
+</div>
+<mat-dialog-actions>
+  <button class="!text-white" mat-button mat-dialog-close>Close</button>
+  @if(data && data.name) {
+    <button class="disabled:!text-white disabled:hover:cursor-pointer disabled:cursor-pointer" mat-flat-button [disabled]="groupName.trim() === '' || groupName.trim() === null" (click)="saveGroup()" >Save</button>
+  } @else {
+    <button class="disabled:!text-white disabled:hover:cursor-pointer disabled:cursor-pointer" mat-flat-button [disabled]="groupName.trim() === '' || groupName.trim() === null" (click)="createGroup()" >Create</button>
+  }
+</mat-dialog-actions>
