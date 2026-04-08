@@ -1,6 +1,6 @@
 {
   "name": "Custom Homepage",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "manifest_version": 3,
   "description": "A custom landing page instead of the default new tab.",
   "chrome_url_overrides": {
@@ -10,25 +10,14 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["tabs", "activeTab", "storage", "unlimitedStorage"],
+  "permissions": ["storage"],
   "host_permissions": [
-    "http://localhost/*",
-    "http://127.0.0.1/*",
-    "https://*/*",
-    "http://*/*"
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["*.css", "*.js"],
-      "matches": ["<all_urls>"]
-    }
+    "https://*/*"
   ],
   "icons": {
-    "16": "assets/images/favicon.ico",
-    "48": "assets/images/favicon.ico",
-    "128": "assets/images/favicon.ico"
+    "16": "assets/images/favicon16x16.ico",
+    "48": "assets/images/favicon48x48.ico",
+    "128": "assets/images/favicon128x128.ico",
+    "256": "assets/images/favicon256x256.ico"
   }
 }
