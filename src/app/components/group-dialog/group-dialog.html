@@ -23,7 +23,7 @@
   </div>
 </div>
 <mat-dialog-content class="custom-scroll relative" >
-  <div class="flex flex-wrap px-6 select-none" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
+  <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center select-none" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
     @if(shortcutData() && shortcutData().group!.length > 0) {
       @for (link of shortcutData().group!; track $index) {
         <div class="p-4" cdkDrag>
@@ -35,7 +35,7 @@
         </div>
       }
     }
-    <div class="py-4">
+    <div class="flex justify-center py-4">
       <div class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5">
         <div matRipple class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5" [matMenuTriggerFor]="menu">
           <mat-icon class="!text-white" >add</mat-icon>

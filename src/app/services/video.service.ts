@@ -44,7 +44,7 @@ export class VideoService {
       }
       this.activeVideoSubject.next(active || null);
     }
-    
+
     this.videosSubject.next(storedVideos);
   }
 
@@ -56,7 +56,7 @@ export class VideoService {
 
     const dataUrl = await this.fileToDataUrl(file);
     const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
-    
+
     const newVideo: VideoItem = {
       id: Date.now().toString(),
       name: file.name,
@@ -79,7 +79,7 @@ export class VideoService {
     }
 
     const updatedVideos = currentVideos.filter(v => v.id !== id);
-    
+
     // If we deleted the active video, set another one as active
     const deletedVideo = currentVideos.find(v => v.id === id);
     if (deletedVideo?.isActive && updatedVideos.length > 0) {
@@ -98,7 +98,7 @@ export class VideoService {
   async updateActiveBackgroundSettings(settings: Partial<VideoItem>): Promise<void> {
     const currentVideos = [...this.videosSubject.value];
     const activeVideoIndex = currentVideos.findIndex(v => v.isActive);
-    
+
     if (activeVideoIndex !== -1) {
       currentVideos[activeVideoIndex] = {
         ...currentVideos[activeVideoIndex],
