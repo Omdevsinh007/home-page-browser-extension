@@ -22,8 +22,8 @@
         class="video">
   }
 
-  <div class="container w-full z-10">
-    <div class="flex flex-wrap" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
+  <div class="container w-full z-10 px-4">
+    <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
       @if(linksData() && linksData()!.length > 0) {
         @for (link of linksData(); track $index) {
           <div class="!p-4" cdkDrag>
@@ -40,7 +40,7 @@
           </div>
         }
       }
-      <div class="py-4">
+      <div class="flex justify-center py-4">
         <div class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95">
           <div matRipple class="w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-white/20 transition-all duration-300 shadow-sm" [matMenuTriggerFor]="menu">
             <mat-icon class="!text-white" >add</mat-icon>
