@@ -8,6 +8,7 @@ import {
   OnInit,
   signal,
   ViewChild,
+  viewChild,
   WritableSignal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -21,6 +22,8 @@ import {
   DragDropModule,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
+import {Menu, MenuContent, MenuItem, MenuTrigger} from '@angular/aria/menu';
+import {OverlayModule} from '@angular/cdk/overlay';
 import { map, Observable, ReplaySubject } from 'rxjs';
 import { ColorDecoder } from "color-decoder";
 import { Link } from './components/link/link';
@@ -42,7 +45,8 @@ import { environment } from '../environments/environment';
     MatMenuModule,
     GroupLink,
     DragDropModule,
-    ColorDecoder
+    ColorDecoder,
+    Menu, MenuContent, MenuItem, MenuTrigger, OverlayModule
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -54,6 +58,9 @@ export class App implements OnInit, AfterViewInit {
   public videoService = inject(VideoService);
 
   protected environment = environment;
+
+  formatMenu = viewChild<Menu<string>>('formatMenu');
+  categorizeMenu = viewChild<Menu<string>>('categorizeMenu');
 
   savedLinks$!: Observable<Shortcut[]>;
   activeVideo$ = this.videoService.activeVideo$;

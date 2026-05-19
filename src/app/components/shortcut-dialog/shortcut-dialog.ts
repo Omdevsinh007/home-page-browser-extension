@@ -72,8 +72,12 @@ export class ShortcutDialog implements OnInit {
   }
 
   modifyUrl(url: string) {
-    // Check if it already starts with http:// or https://
-    if (!/^https?:\/\//i.test(url)) {
+    // Check if it's a system file path (Windows or Unix style)
+    const isSystemPath = /^[a-zA-Z]:\\|^[a-zA-Z]:\/|^\/|^\./.test(url);
+    // Check if it's a protocol (http, https, file, chrome, etc.)
+    const hasProtocol = /^[a-z0-9+.-]+:\/\//i.test(url) || /^about:/i.test(url);
+
+    if (!isSystemPath && !hasProtocol) {
       url = 'https://' + url;
     }
 
