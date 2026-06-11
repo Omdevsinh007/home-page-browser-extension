@@ -278,4 +278,78 @@ export class App implements OnInit, AfterViewInit {
     const input = event.target as HTMLInputElement;
     this.updateSettings({ blur: parseInt(input.value, 10) });
   }
+
+  exportData() {
+    const data = this.linksData();
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shortcuts-export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  private isValidShortcutData(data: any): boolean {
+    if (!Array.isArray(data)) return false;
+
+    for (const item of data) {
+      if (!item || typeof item !== 'object') return false;
+      if (typeof item.id !== 'string') return false;
+      if (item.type !== 'Shortcut' && item.type !== 'Group') return false;
+      if (typeof item.position !== 'number') return false;
+      
+      if (item.name !== null && typeof item.name !== 'string') return false;
+      if (item.url !== null && typeof item.url !== 'string') return false;
+
+      if (item.group !== null) {
+        if (!Array.isArray(item.group)) return false;
+        for (const g of item.group) {
+          if (!g || typeof g !== 'object') return false;
+          if (typeof g.id !== 'string') return false;
+          if (typeof g.name !== 'string') return false;
+          if (typeof g.url !== 'string') return false;
+          if (typeof g.position !== 'number') return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  async onImportData(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
+        alert('Invalid file type. Please upload a JSON file.');
+        input.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string;
+          const parsedData = JSON.parse(content);
+          
+          if (!this.isValidShortcutData(parsedData)) {
+            throw new Error('Invalid data format. JSON does not match the required schema.');
+          }
+          
+          await this.storageService.setShortcuts(parsedData as Shortcut[]);
+          this.linksData.set(parsedData as Shortcut[]);
+        } catch (error) {
+          alert('Error importing data. Please ensure the file is a valid shortcuts export.');
+          console.error('Import error:', error);
+        } finally {
+          input.value = ''; // Reset input
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
 }

@@ -21,8 +21,14 @@
             "assets": [
               "src/public",
               "src/assets",
-              "src/manifest.json",
-              "src/background.js"
+              "src/manifest.json"
+            ],
+            "scripts": [
+              {
+                "bundleName": "background",
+                "input": "src/background.js",
+                "inject": false
+              }
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
