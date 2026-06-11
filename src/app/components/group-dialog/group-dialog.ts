@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButton } from '@angular/material/button';
@@ -14,6 +14,7 @@ import { GroupName } from '../group-name/group-name';
   selector: 'app-group-dialog',
   imports: [MatDialogModule, Link, MatMenuModule, MatIcon, MatButton, DragDropModule],
   templateUrl: './group-dialog.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-dialog.css'
 })
 export class GroupDialog {
@@ -33,9 +34,9 @@ export class GroupDialog {
     });
 
     dialog.afterClosed().subscribe({
-      next:(data) => {
-        if(data?.success) {
-          this.shortcutData.update((s) => ({...s, group: data.data.group}));
+      next: (data) => {
+        if (data?.success) {
+          this.shortcutData.update((s) => ({ ...s, group: data.data.group }));
         }
       }
     })
@@ -50,9 +51,9 @@ export class GroupDialog {
     });
 
     dialog.afterClosed().subscribe({
-      next:(data) => {
-        if(data?.success) {
-          this.shortcutData.update((s) => ({...s, group: data.data.group}));
+      next: (data) => {
+        if (data?.success) {
+          this.shortcutData.update((s) => ({ ...s, group: data.data.group }));
         }
       }
     })
@@ -81,14 +82,14 @@ export class GroupDialog {
 
   removeShortcut(id: string) {
     this.shortcutData.update((v) => {
-      return ({ ...v, group: v.group?.filter(g => g.id !== id)!});
+      return ({ ...v, group: v.group?.filter(g => g.id !== id)! });
     });
     this.savedLinks.addSavedLink(this.shortcutData());
   }
 
   async drop(event: CdkDragDrop<Shortcut[]>) {
     moveItemInArray(this.shortcutData().group!, event.previousIndex, event.currentIndex);
-    this.shortcutData.update((value) => ({...value, group: value.group!.map((data, index) => ({...data, position: index}))}));
+    this.shortcutData.update((value) => ({ ...value, group: value.group!.map((data, index) => ({ ...data, position: index })) }));
     await this.savedLinks.addSavedLink(this.shortcutData());
   }
 }

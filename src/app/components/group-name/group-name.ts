@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,7 @@ import { GroupDialog } from '../group-dialog/group-dialog';
   selector: 'app-group-name',
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatDialogModule, MatButtonModule],
   templateUrl: './group-name.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-name.css'
 })
 export class GroupName implements OnInit {
@@ -22,11 +23,11 @@ export class GroupName implements OnInit {
   private savedLinkGroup = inject(SaveLinks);
 
   ngOnInit(): void {
-    if(this.data && this.data.name) {
+    if (this.data && this.data.name) {
       this.groupName = this.data.name;
     }
     this.savedLinkGroup.getSavedLinks().subscribe({
-      next:(data) => {
+      next: (data) => {
         this.shortcutData = data.length;
       }
     })
