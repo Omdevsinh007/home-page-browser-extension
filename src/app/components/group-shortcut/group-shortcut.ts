@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -12,13 +12,14 @@ import { firstValueFrom } from 'rxjs';
   selector: 'app-group-shortcut',
   imports: [MatDialogModule, MatDialogModule, ReactiveFormsModule, MatInput, MatButtonModule, MatFormFieldModule],
   templateUrl: './group-shortcut.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-shortcut.css'
 })
 export class GroupShortcut {
   private dialogRef = inject(MatDialogRef<GroupShortcut>)
   private fb = inject(FormBuilder);
   private service = inject(SaveLinks);
-  data = inject<{ shortcut:Shortcut, index:number, isNewGroup: boolean }>(MAT_DIALOG_DATA);
+  data = inject<{ shortcut: Shortcut, index: number, isNewGroup: boolean }>(MAT_DIALOG_DATA);
 
   shortcutForm = this.fb.group({
     name: ['', [Validators.required, this.checkForEmptySpaces]],
@@ -26,7 +27,7 @@ export class GroupShortcut {
   });
 
   ngOnInit(): void {
-    if(this.data?.shortcut && !this.data.isNewGroup) {
+    if (this.data?.shortcut && !this.data.isNewGroup) {
       this.shortcutForm.patchValue({
         name: this.data.shortcut.group?.[this.data.index]?.name,
         url: this.data.shortcut.group?.[this.data.index]?.url
@@ -37,7 +38,7 @@ export class GroupShortcut {
   shortcuts = this.service.getSavedLinks();
 
   async addShortcut() {
-    if(this.shortcutForm.get('name')?.value?.trim()! === '' || this.shortcutForm.get('url')?.value?.trim()! === '') {
+    if (this.shortcutForm.get('name')?.value?.trim()! === '' || this.shortcutForm.get('url')?.value?.trim()! === '') {
       this.shortcutForm.markAllAsDirty();
       this.shortcutForm.markAllAsTouched();
       this.shortcutForm.updateValueAndValidity();
@@ -67,7 +68,7 @@ export class GroupShortcut {
   }
 
   async editShortcut() {
-    if(this.shortcutForm.get('name')?.value?.trim()! === '' || this.shortcutForm.get('url')?.value?.trim()! === '') {
+    if (this.shortcutForm.get('name')?.value?.trim()! === '' || this.shortcutForm.get('url')?.value?.trim()! === '') {
       this.shortcutForm.markAllAsDirty();
       this.shortcutForm.markAllAsTouched();
       this.shortcutForm.updateValueAndValidity();

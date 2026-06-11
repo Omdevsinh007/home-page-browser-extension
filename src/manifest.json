@@ -1,6 +1,6 @@
 {
   "name": "Custom Homepage",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "manifest_version": 3,
   "description": "A custom landing page instead of the default new tab.",
   "chrome_url_overrides": {
@@ -10,7 +10,10 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
   "host_permissions": [
     "https://*/*",
     "file:///*"

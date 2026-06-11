@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { Group, Shortcut } from '../../models/shortcut';
 import { MatMenuModule } from "@angular/material/menu";
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'app-link',
   imports: [MatMenuModule, MatButtonModule],
   templateUrl: './link.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link.css'
 })
 export class Link {
