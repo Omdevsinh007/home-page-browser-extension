@@ -10,6 +10,7 @@ import {
   ViewChild,
   viewChild,
   WritableSignal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VideoService, VideoItem } from './services/video.service';
@@ -22,8 +23,8 @@ import {
   DragDropModule,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
-import {Menu, MenuContent, MenuItem, MenuTrigger} from '@angular/aria/menu';
-import {OverlayModule} from '@angular/cdk/overlay';
+import { Menu } from '@angular/aria/menu';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { map, Observable, ReplaySubject } from 'rxjs';
 import { ColorDecoder } from "color-decoder";
 import { Link } from './components/link/link';
@@ -46,10 +47,11 @@ import { environment } from '../environments/environment';
     GroupLink,
     DragDropModule,
     ColorDecoder,
-    Menu, MenuContent, MenuItem, MenuTrigger, OverlayModule
+    OverlayModule
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class App implements OnInit, AfterViewInit {
@@ -301,7 +303,7 @@ export class App implements OnInit, AfterViewInit {
       if (typeof item.id !== 'string') return false;
       if (item.type !== 'Shortcut' && item.type !== 'Group') return false;
       if (typeof item.position !== 'number') return false;
-      
+
       if (item.name !== null && typeof item.name !== 'string') return false;
       if (item.url !== null && typeof item.url !== 'string') return false;
 
@@ -323,7 +325,7 @@ export class App implements OnInit, AfterViewInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
         alert('Invalid file type. Please upload a JSON file.');
         input.value = '';
@@ -335,11 +337,11 @@ export class App implements OnInit, AfterViewInit {
         try {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
-          
+
           if (!this.isValidShortcutData(parsedData)) {
             throw new Error('Invalid data format. JSON does not match the required schema.');
           }
-          
+
           await this.storageService.setShortcuts(parsedData as Shortcut[]);
           this.linksData.set(parsedData as Shortcut[]);
         } catch (error) {

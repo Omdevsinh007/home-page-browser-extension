@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
@@ -9,6 +9,7 @@ import { GroupName } from '../group-name/group-name';
   selector: 'app-group-link',
   imports: [MatMenuModule, MatButtonModule],
   templateUrl: './group-link.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-link.css'
 })
 export class GroupLink {
