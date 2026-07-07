@@ -59,8 +59,12 @@ export class ShortcutDialog implements OnInit {
     try {
       await this.service.addSavedLink(shortcut);
     } catch (err) {
-      console.log({})
+      console.error(err)
     }
+    this.dialogRef.close();
+  }
+
+  closeDialog() {
     this.dialogRef.close();
   }
 

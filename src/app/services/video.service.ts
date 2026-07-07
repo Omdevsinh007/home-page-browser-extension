@@ -62,13 +62,14 @@ export class VideoService {
       name: file.name,
       dataUrl,
       type: mediaType,
-      isActive: currentVideos.length === 0,
+      isActive: true,
       objectFit: 'cover',
       brightness: 100,
       blur: 0
     };
 
     const updatedVideos = [...currentVideos, newVideo];
+    this.updateActiveStatus(updatedVideos, newVideo.id);
     await this.saveVideos(updatedVideos);
   }
 
@@ -156,7 +157,7 @@ export class VideoService {
     return new Promise((resolve) => {
       if (chrome?.storage?.local) {
         chrome.storage.local.get(['backgroundVideos'], (result) => {
-          resolve(result['backgroundVideos'] || []);
+          resolve((result['backgroundVideos'] as VideoItem[]) || []);
         });
       } else {
         resolve([]);
