@@ -1,17 +1,11 @@
-<div class="relative select-none" >
-  <div
-    matRipple
-    matRippleColor="#c9c9c924"
-    class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 flex-wrap rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-start p-3.5 relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5"
-  >
-  @for (link of quickLink()?.group?.slice(0, 4); track $index) {
-    <div class="w-1/2 flex justify-center items-center" >
+<div class="relative select-none">
+  <div matRipple matRippleColor="#c9c9c924"
+    class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 flex-wrap rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-start p-3.5 relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5">
+    @for (link of quickLink()?.group?.slice(0, 4); track $index) {
+    <div class="w-1/2 flex justify-center items-center">
       <div
-        class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5"
-      >
-        <img
-          [src]="'https://www.google.com/s2/favicons?domain=' + link.url"
-        />
+        class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5">
+        <img [src]="'https://www.google.com/s2/favicons?domain=' + link.url" />
       </div>
     </div>
     }
@@ -19,9 +13,24 @@
       {{ quickLink()!.name }}
     </p>
   </div>
+
+  <div class="absolute top-1 right-1 z-10">
+    <button class="menu-trigger-btn" [matMenuTriggerFor]="groupLinkMenu" (click)="$event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+        <path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+      </svg>
+    </button>
+  </div>
 </div>
 
-<mat-menu #menu="matMenu">
-  <button mat-menu-item (click)="editShortcut()" >Edit shortcut</button>
-  <button mat-menu-item (click)="removeShortcut()" >Remove</button>
+<mat-menu #groupLinkMenu="matMenu"
+  class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
+  <button mat-menu-item (click)="editShortcut()"
+    class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-1">Edit</button>
+  <button mat-menu-item (click)="removeShortcut()"
+    class="!text-red-400 hover:!bg-red-400/10 !transition-colors !rounded-lg">Remove</button>
 </mat-menu>

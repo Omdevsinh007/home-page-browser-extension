@@ -5,7 +5,125 @@ html,
 body {
   height: 100%;
 }
+
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+:root {
+  --glass-radius: 26px;
+  --glass-radius-sm: 16px;
+
+  --glass-blur: 20px;
+  --glass-saturation: 180%;
+  --glass-brightness: 1.08;
+
+  --glass-bg: rgba(18, 20, 28, 0.05);
+
+  --glass-white-1: rgba(255, 255, 255, 0.30);
+  --glass-white-2: rgba(255, 255, 255, 0.18);
+  --glass-white-3: rgba(255, 255, 255, 0.08);
+  --glass-white-4: rgba(255, 255, 255, 0.03);
+
+  --glass-blue: rgba(120, 180, 255, 0.20);
+  --glass-pink: rgba(255, 140, 200, 0.20);
+
+  --glass-border: rgba(255, 255, 255, 0.18);
+
+  --glass-shadow:
+    0 0 0 1px rgba(255, 255, 255, .04),
+    0 12px 40px rgba(0, 0, 0, .18),
+    0 30px 80px rgba(0, 0, 0, .22);
+
+  --glass-text: rgba(255, 255, 255, .96);
+}
+
+/* ───────────────────────────────────────────── */
+
+.cdk-overlay-container {
+  z-index: 9999;
+}
+
+.cdk-overlay-pane {
+  background: transparent;
+}
+
+
+
+[ngMenu] [role='separator'] {
+  height: 1px;
+
+  margin: 4px 8px;
+
+  border: none;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, .18),
+      transparent);
+}
+
+/* ───────────────────────────────────────────── */
+/* MATERIAL DIALOG — GLASS SURFACE              */
+/* ───────────────────────────────────────────── */
+
+.mat-mdc-dialog-surface {
+  --mat-dialog-container-color: transparent;
+
+  background:
+    radial-gradient(circle at 80% 15%,
+      var(--glass-pink),
+      transparent 45%),
+    radial-gradient(circle at 20% 85%,
+      var(--glass-blue),
+      transparent 50%),
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 100%),
+    rgba(18, 20, 28, 0.45) !important;
+
+  backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
+
+  border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.32) !important;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 28px !important;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .04),
+    0 20px 60px rgba(0, 0, 0, 0.35),
+    0 40px 100px rgba(0, 0, 0, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 40px rgba(255, 255, 255, 0.03) !important;
+
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Subtle inner highlight for the dialog surface */
+.mat-mdc-dialog-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 5%,
+      rgba(255, 255, 255, 0.35),
+      transparent 25%),
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.12),
+      transparent 30%);
+  z-index: 0;
+}
+
+/* Dialog backdrop glass tint */
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }

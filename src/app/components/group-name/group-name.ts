@@ -46,18 +46,24 @@ export class GroupName implements OnInit {
       group: [],
       position: this.shortcutData
     }
-    this.savedLinkGroup.addSavedLink(data);
-    this.dialog.open(GroupDialog, {
-      hasBackdrop: true,
-      maxWidth: '70dvw',
-      maxHeight: '70dvh',
-      height: '100%',
-      width: '100%',
-      disableClose: true,
-      data: data,
-      id: "dialog-group-overlay"
+    await this.savedLinkGroup.addSavedLink(data);
+    const sub = this.savedLinkGroup.getSavedLinks().subscribe(links => {
+      this.dialog.open(GroupDialog, {
+        hasBackdrop: true,
+        maxWidth: '70dvw',
+        maxHeight: '70dvh',
+        height: '100%',
+        width: '100%',
+        disableClose: true,
+        data: {
+          shortcut: data,
+          allGroups: links.filter((l: Shortcut) => l.type === 'Group')
+        },
+        id: "dialog-group-overlay"
+      });
+      this.dialogRef.close();
     });
-    this.dialogRef.close()
+    sub.unsubscribe();
   }
 
   saveGroup() {

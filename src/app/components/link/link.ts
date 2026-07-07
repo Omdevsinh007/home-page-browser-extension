@@ -1,11 +1,11 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { Group, Shortcut } from '../../models/shortcut';
-import { MatMenuModule } from "@angular/material/menu";
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-link',
-  imports: [MatMenuModule, MatButtonModule],
+  imports: [MatButtonModule, MatMenuModule],
   templateUrl: './link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link.css'
@@ -19,7 +19,7 @@ export class Link {
 
   edit() {
     this.editShortcut.emit(this.quickLink() as Shortcut);
-    this.editIndex.emit(this.index()!)
+    this.editIndex.emit(this.index()!);
   }
 
   remove() {

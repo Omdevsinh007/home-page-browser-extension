@@ -3,27 +3,28 @@ import {
   Component,
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
+  DestroyRef,
   ElementRef,
   inject,
+  OnDestroy,
   OnInit,
   signal,
   ViewChild,
-  viewChild,
   WritableSignal,
   ChangeDetectionStrategy
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { VideoService, VideoItem } from './services/video.service';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import {
   CdkDragDrop,
   DragDropModule,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
-import { Menu } from '@angular/aria/menu';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { map, Observable, ReplaySubject } from 'rxjs';
 import { ColorDecoder } from "color-decoder";
@@ -54,15 +55,16 @@ import { environment } from '../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class App implements OnInit, AfterViewInit {
+export class App implements OnInit, AfterViewInit, OnDestroy {
   private storageService = inject(SaveLinks);
   private dialog = inject(MatDialog);
+  private destroyRef = inject(DestroyRef);
   public videoService = inject(VideoService);
 
-  protected environment = environment;
+  /** Tracks the currently open group dialog to allow seamless switching */
+  private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
-  formatMenu = viewChild<Menu<string>>('formatMenu');
-  categorizeMenu = viewChild<Menu<string>>('categorizeMenu');
+  protected environment = environment;
 
   savedLinks$!: Observable<Shortcut[]>;
   activeVideo$ = this.videoService.activeVideo$;
@@ -79,8 +81,9 @@ export class App implements OnInit, AfterViewInit {
 
   private animationFrameId?: number;
   private lastSampleTime = 0;
-  private canvas = document.createElement('canvas');
-  private ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+  private destroyed = false;
+  private canvas!: HTMLCanvasElement;
+  private ctx!: CanvasRenderingContext2D | null;
 
   async ngOnInit(): Promise<void> {
     if (this.environment.isProd) {
@@ -91,7 +94,10 @@ export class App implements OnInit, AfterViewInit {
       this.loadDataForDev(this.savedLinks$);
     }
     this.savedLinks$
-      .pipe(map((s) => s.sort((a, b) => a?.position - b?.position)))
+      .pipe(
+        map((s) => s.sort((a, b) => a?.position - b?.position)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (data) => {
           this.linksData.set(data);
@@ -104,17 +110,34 @@ export class App implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    // Initialize canvas for color extraction (avoid creating in constructor for SSR safety)
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     // Start color extraction loop when view is initialized
     this.extractColorLoop();
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
     }
+    // Clean up canvas resources
+    if (this.canvas) {
+      this.canvas.width = 0;
+      this.canvas.height = 0;
+    }
+    this.ctx = null;
+    // Close any open group dialog
+    this.groupDialogRef?.close();
+    this.groupDialogRef = null;
   }
 
   private extractColorLoop = () => {
+    // Stop loop if component has been destroyed (prevents race condition)
+    if (this.destroyed) return;
+
     // Stop loop if no video exists
     if (!this.mainVideo?.nativeElement || !this.ctx) {
       this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
@@ -248,15 +271,26 @@ export class App implements OnInit, AfterViewInit {
   }
 
   openShortcutGroup(shortcut: Shortcut) {
-    this.dialog.open(GroupDialog, {
+    this.groupDialogRef = this.dialog.open(GroupDialog, {
       maxWidth: '70dvw',
       maxHeight: '70dvh',
       height: '100%',
       width: '100%',
       id: 'dialog-group-overlay',
-      data: shortcut,
-      disableClose: true,
+      data: {
+        shortcut: shortcut,
+        allGroups: this.linksData().filter(l => l.type === 'Group')
+      },
+      hasBackdrop: true,
+      panelClass: 'group-dialog-panel'
     });
+
+    // Clean up the ref when dialog is closed
+    this.groupDialogRef.afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.groupDialogRef = null;
+      });
   }
 
   async drop(event: CdkDragDrop<Shortcut[]>) {

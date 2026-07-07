@@ -36,7 +36,7 @@
           class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95">
           <div matRipple
             class="w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-white/20 transition-all duration-300 shadow-sm"
-            [matMenuTriggerFor]="menu">
+            [matMenuTriggerFor]="addMenu">
             <mat-icon class="!text-white">add</mat-icon>
           </div>
         </div>
@@ -45,7 +45,7 @@
   </div>
 
   <!-- Data Management Floating Button (Invisible until hover) -->
-  <div class="absolute top-6 right-6 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
+  <div class="absolute top-6 right-6 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300 flex gap-2">
     <button
       class="glass-button hover:cursor-pointer w-10 h-10 rounded-full flex justify-center items-center group shadow-sm bg-white/10 backdrop-blur-md"
       [matMenuTriggerFor]="dataMenu">
@@ -54,7 +54,7 @@
   </div>
 
   <!-- Video Management Floating Button -->
-  <div colorDecoder [style.color]="iconColor()" class="absolute bottom-6 right-6 z-50" [autoApply]="true">
+  <div colorDecoder [autoApply]="true" [style.color]="iconColor()" class="absolute bottom-6 right-6 z-50">
     <button (click)="toggleVideoMenu()"
       class="glass-button hover:cursor-pointer w-12 h-12 rounded-full flex justify-center items-center group transition-all hover:scale-110">
       <mat-icon class="text-white group-hover:rotate-12 transition-transform">wallpaper</mat-icon>
@@ -154,17 +154,23 @@
   }
 </div>
 
-<mat-menu #menu="matMenu">
-  <button mat-menu-item (click)="addShortcut()">Add shortcut</button>
-  <button mat-menu-item (click)="addGroup()">Add group</button>
+<mat-menu #addMenu="matMenu"
+  class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
+  <button mat-menu-item (click)="addShortcut()"
+    class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-0">Add shortcut</button>
+  <button mat-menu-item (click)="addGroup()" class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg">Add
+    group</button>
 </mat-menu>
 
-<mat-menu #dataMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl">
-  <button mat-menu-item (click)="exportData()" class="!text-white hover:!bg-white/10 transition-colors">
+<mat-menu #dataMenu="matMenu"
+  class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
+  <button mat-menu-item (click)="exportData()"
+    class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-1">
     <mat-icon class="!text-white">upload</mat-icon>
     <span>Export Data</span>
   </button>
-  <button mat-menu-item (click)="fileInput.click()" class="!text-white hover:!bg-white/10 transition-colors">
+  <button mat-menu-item (click)="fileInput.click()"
+    class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg">
     <mat-icon class="!text-white">download</mat-icon>
     <span>Import Data</span>
   </button>

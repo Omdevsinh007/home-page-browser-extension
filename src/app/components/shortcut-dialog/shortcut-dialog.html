@@ -4,28 +4,29 @@
 <div class="">
   <form [formGroup]="shortcutForm">
     <div class="flex items-center flex-col gap-5 p-6">
-      <mat-form-field class="w-full">
-        <mat-label id="name" class="" >Name</mat-label>
-        <input matInput type="text" for="name" formControlName="name"/>
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label id="name" class="!text-white/70">Name</mat-label>
+        <input matInput class="!text-white placeholder:cursor-pointer" type="text" for="name" formControlName="name" />
         @if(shortcutForm.hasError('whitespace') || shortcutForm.hasError('required')) {
-          <mat-error>
-            This field is required!
-          </mat-error>
+        <mat-error>
+          This field is required!
+        </mat-error>
         }
       </mat-form-field>
-      <mat-form-field class="w-full">
-        <mat-label id="url" class="" >URL</mat-label>
-        <input matInput type="text" for="url" formControlName="url"/>
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label id="url" class="!text-white/70">URL</mat-label>
+        <input matInput class="!text-white placeholder:cursor-pointer" type="text" for="url" formControlName="url" />
         @if(shortcutForm.hasError('whitespace') || shortcutForm.hasError('required')) {
-          <mat-error>
-            This field is required!
-          </mat-error>
+        <mat-error>
+          This field is required!
+        </mat-error>
         }
       </mat-form-field>
     </div>
   </form>
 </div>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close>Close</button>
-  <button mat-flat-button [disabled]="shortcutForm.invalid" (click)="addShortcut()" >{{ data ? 'Update' : 'Save'}}</button>
+  <button class="!text-white" mat-button (click)="closeDialog()">Close</button>
+  <button class="disabled:!text-white disabled:hover:cursor-pointer disabled:cursor-pointer" mat-flat-button [disabled]="shortcutForm.invalid" (click)="addShortcut()">{{ data ? 'Update' :
+    'Save'}}</button>
 </mat-dialog-actions>
