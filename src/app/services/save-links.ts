@@ -23,7 +23,7 @@ export class SaveLinks {
             console.error('Error getting storage:', chrome.runtime.lastError);
             reject(chrome.runtime.lastError);
           } else {
-            resolve(result[key]);
+            resolve(result[key] as T);
           }
         });
       } catch (error) {

@@ -1,6 +1,6 @@
 {
   "name": "home-page-extension",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -20,7 +20,7 @@
     "@angular/platform-browser": "^22.0.1",
     "@angular/router": "^22.0.1",
     "@tailwindcss/postcss": "^4.1.11",
-    "color-decoder": "^0.0.1",
+    "color-decoder": "^1.1.1",
     "postcss": "^8.5.6",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.11",

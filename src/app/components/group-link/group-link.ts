@@ -2,12 +2,13 @@ import { Component, inject, input, output, ChangeDetectionStrategy } from '@angu
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { Shortcut } from '../../models/shortcut';
 import { GroupName } from '../group-name/group-name';
 
 @Component({
   selector: 'app-group-link',
-  imports: [MatMenuModule, MatButtonModule],
+  imports: [MatButtonModule, MatMenuModule, OverlayModule],
   templateUrl: './group-link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-link.css'

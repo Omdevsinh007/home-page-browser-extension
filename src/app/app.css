@@ -1,20 +1,30 @@
 :root {
-  /* Dynamic Theme Color Base */
-  --theme-rgb: 255, 255, 255;
-  
-  /* Advanced Glass Theme Variables based on Theme Color */
-  --glass-bg: rgba(var(--theme-rgb), 0.08);
-  --glass-bg-light: rgba(var(--theme-rgb), 0.12);
-  --glass-bg-hover: rgba(var(--theme-rgb), 0.15);
-  --glass-border: rgba(var(--theme-rgb), 0.15);
-  --glass-border-light: rgba(var(--theme-rgb), 0.25);
-  --glass-highlight: rgba(var(--theme-rgb), 0.3);
-  
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-  --glass-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
-  --glass-blur: blur(25px) saturate(180%) contrast(1.2);
-  --glass-blur-sm: blur(12px) saturate(140%);
-  --transition-smooth: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --glass-radius: 22px;
+  --glass-radius-sm: 14px;
+
+  --glass-blur: 20px;
+  --glass-saturation: 180%;
+  --glass-brightness: 1.08;
+
+  --glass-bg: rgba(18, 20, 28, 0.06);
+
+  --glass-white-1: rgba(255, 255, 255, 0.30);
+  --glass-white-2: rgba(255, 255, 255, 0.18);
+  --glass-white-3: rgba(255, 255, 255, 0.08);
+  --glass-white-4: rgba(255, 255, 255, 0.03);
+
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-border-strong: rgba(255, 255, 255, 0.28);
+
+  --glass-blue: rgba(120, 180, 255, 0.18);
+  --glass-pink: rgba(255, 140, 200, 0.18);
+
+  --glass-shadow:
+    0 0 0 1px rgba(255, 255, 255, .04),
+    0 12px 40px rgba(0, 0, 0, .20),
+    0 30px 80px rgba(0, 0, 0, .22);
+
+  --glass-text: rgba(255, 255, 255, .96);
 }
 
 /* Layout Containers */
@@ -54,12 +64,10 @@
 /* PRIMARY GLASS CONTAINER */
 .input-wrap {
   /* Multi-layered gradient for depth */
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.06) 50%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 100%);
 
   /* Premium Frost Effect */
   -webkit-backdrop-filter: var(--glass-blur);
@@ -85,12 +93,10 @@
 }
 
 .input-wrap:hover {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.03) 100%);
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
@@ -107,11 +113,9 @@
   overflow: hidden;
 
   /* Premium Background & Blur */
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.11) 0%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.11) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
 
   -webkit-backdrop-filter: var(--glass-blur-sm);
   backdrop-filter: var(--glass-blur-sm);
@@ -135,11 +139,9 @@
 }
 
 .custom-shortcut-placeholder {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.01) 100%);
   border: 2px dashed rgba(255, 255, 255, 0.35);
   min-height: 60px;
   border-radius: 18px;
@@ -150,11 +152,9 @@
 
 .custom-shortcut-placeholder:hover {
   border-color: rgba(255, 255, 255, 0.5);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.03) 100%);
 }
 
 /* VIDEO MANAGEMENT UI STYLES */
@@ -202,4 +202,8 @@
 
 .main-video {
   object-fit: cover;
+}
+
+::ng-deep .mat-mdc-menu-content {
+  padding: 0 !important;
 }
