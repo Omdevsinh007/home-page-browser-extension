@@ -1,6 +1,6 @@
 {
   "name": "Custom Homepage",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "manifest_version": 3,
   "description": "A custom landing page instead of the default new tab.",
   "chrome_url_overrides": {
