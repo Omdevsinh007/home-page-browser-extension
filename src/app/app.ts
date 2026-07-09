@@ -82,8 +82,7 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   private animationFrameId?: number;
   private lastSampleTime = 0;
   private destroyed = false;
-  private canvas!: HTMLCanvasElement;
-  private ctx!: CanvasRenderingContext2D | null;
+  private worker!: Worker;
 
   async ngOnInit(): Promise<void> {
     if (this.environment.isProd) {
@@ -110,11 +109,16 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Initialize canvas for color extraction (avoid creating in constructor for SSR safety)
-    this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-    // Start color extraction loop when view is initialized
-    this.extractColorLoop();
+    if (typeof Worker !== 'undefined') {
+      this.worker = new Worker(new URL('./workers/color-extraction.worker', import.meta.url), { type: 'module' });
+      
+      this.worker.onmessage = ({ data }) => {
+        const { r, g, b } = data;
+        document.documentElement.style.setProperty('--theme-rgb', `${r}, ${g}, ${b}`);
+      };
+      
+      this.extractColorLoop();
+    }
   }
 
   ngOnDestroy(): void {
@@ -123,12 +127,9 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
     }
-    // Clean up canvas resources
-    if (this.canvas) {
-      this.canvas.width = 0;
-      this.canvas.height = 0;
+    if (this.worker) {
+      this.worker.terminate();
     }
-    this.ctx = null;
     // Close any open group dialog
     this.groupDialogRef?.close();
     this.groupDialogRef = null;
@@ -139,7 +140,7 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     if (this.destroyed) return;
 
     // Stop loop if no video exists
-    if (!this.mainVideo?.nativeElement || !this.ctx) {
+    if (!this.mainVideo?.nativeElement || !this.worker) {
       this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
       return;
     }
@@ -167,47 +168,19 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     this.extractColorFromSource(img);
   }
 
-  private extractColorFromSource(source: CanvasImageSource) {
-    if (!this.ctx) return;
-
-    // Downscale massively for maximum speed
-    this.canvas.width = 64;
-    this.canvas.height = 64;
+  private async extractColorFromSource(source: CanvasImageSource) {
+    if (!this.worker) return;
 
     try {
-      this.ctx.drawImage(source, 0, 0, this.canvas.width, this.canvas.height);
-      const imageData = this.ctx.getImageData(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height,
-      ).data;
-
-      let r = 0,
-        g = 0,
-        b = 0;
-      const step = 4 * 10; // Sample every 10th pixel for massive performance boost
-      let samples = 0;
-
-      for (let i = 0; i < imageData.length; i += step) {
-        r += imageData[i];
-        g += imageData[i + 1];
-        b += imageData[i + 2];
-        samples++;
-      }
-
-      if (samples > 0) {
-        r = Math.floor(r / samples);
-        g = Math.floor(g / samples);
-        b = Math.floor(b / samples);
-
-        document.documentElement.style.setProperty(
-          '--theme-rgb',
-          `${r}, ${g}, ${b}`,
-        );
-      }
+      const imageBitmap = await createImageBitmap(source, {
+        resizeWidth: 64,
+        resizeHeight: 64,
+        resizeQuality: 'low'
+      });
+      
+      this.worker.postMessage({ imageBitmap }, [imageBitmap]);
     } catch (e) {
-      // Ignore cross-origin canvas errors
+      // Ignore cross-origin errors or empty sources
     }
   }
 
