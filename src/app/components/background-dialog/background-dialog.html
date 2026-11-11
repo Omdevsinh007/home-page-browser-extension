@@ -1,0 +1,76 @@
+<div class="flex flex-col gap-4 p-5 text-white">
+  <div class="flex items-center justify-between border-b border-white/20 pb-3">
+    <h2 id="background-dialog-title" class="flex items-center gap-2 text-lg font-medium">
+      <mat-icon aria-hidden="true">wallpaper</mat-icon> Backgrounds
+    </h2>
+    <button type="button" (click)="close()" aria-label="Close"
+      class="flex size-10 items-center justify-center rounded-full outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <ul class="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1" role="radiogroup" aria-label="Choose a background">
+    @for (item of bg.list(); track item.id) {
+      <li class="flex flex-col gap-2 rounded-xl border p-3 transition-colors"
+        [class.border-white]="item.isActive" [class.bg-white/10]="item.isActive"
+        [class.border-transparent]="!item.isActive" [class.bg-white/5]="!item.isActive">
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" role="radio" [attr.aria-checked]="item.isActive" (click)="select(item.id)"
+            class="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+            <mat-icon class="shrink-0" [class.text-green-400]="item.isActive" [class.text-white/40]="!item.isActive">
+              {{ item.isActive ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <span class="truncate text-sm font-medium" [title]="item.name">{{ item.name }}</span>
+          </button>
+          <button type="button" (click)="remove(item.id, $event)" [attr.aria-label]="'Delete ' + item.name"
+            class="flex size-10 shrink-0 items-center justify-center rounded-full text-white/60 outline-none hover:bg-white/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-white/70">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+
+        @if (item.isActive && bg.active(); as active) {
+          <div class="mt-1 flex flex-col gap-3 border-t border-white/10 pt-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-white/60" id="fit-label">Image fit</span>
+              <div class="flex gap-1 rounded-lg bg-black/20 p-1" role="group" aria-labelledby="fit-label">
+                @for (fit of fits; track fit.value) {
+                  <button type="button" class="flex-1 rounded-md py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    [class.bg-white/20]="active.meta.objectFit === fit.value" [attr.aria-pressed]="active.meta.objectFit === fit.value"
+                    (click)="setFit(fit.value)">{{ fit.label }}</button>
+                }
+              </div>
+            </div>
+            <label class="flex flex-col gap-1.5">
+              <span class="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                Brightness <span>{{ active.meta.brightness }}%</span>
+              </span>
+              <input type="range" class="w-full accent-white" min="10" max="200" aria-label="Brightness"
+                [value]="active.meta.brightness" (input)="previewNumber('brightness', $event)" (change)="commit()" />
+            </label>
+            <label class="flex flex-col gap-1.5">
+              <span class="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                Blur <span>{{ active.meta.blur }}px</span>
+              </span>
+              <input type="range" class="w-full accent-white" min="0" max="20" aria-label="Blur"
+                [value]="active.meta.blur" (input)="previewNumber('blur', $event)" (change)="commit()" />
+            </label>
+          </div>
+        }
+      </li>
+    } @empty {
+      <li class="py-4 text-center text-sm text-white/60">No backgrounds yet.</li>
+    }
+  </ul>
+
+  <div class="border-t border-white/10 pt-3 text-center">
+    <label class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-medium hover:bg-white/20 focus-within:ring-2 focus-within:ring-white/70"
+      [class.opacity-50]="bg.list().length >= max">
+      <mat-icon aria-hidden="true">upload_file</mat-icon>
+      Upload new background
+      <input type="file" accept="video/*,image/*" class="sr-only" [disabled]="bg.list().length >= max" (change)="upload($event)" />
+    </label>
+    <p class="mt-3 text-[11px] leading-tight text-white/60">
+      Up to {{ max }} backgrounds. One must stay active. Stored locally in this browser.
+    </p>
+  </div>
+</div>

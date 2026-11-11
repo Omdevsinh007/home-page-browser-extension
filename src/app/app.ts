@@ -1,15 +1,4 @@
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-  ElementRef,
-  inject,
-  OnDestroy,
-  OnInit,
-  signal,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -17,9 +6,9 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
-import { ColorDecoder } from 'color-decoder';
 import { firstValueFrom } from 'rxjs';
-import { VideoService, VideoItem } from './services/video.service';
+import { BackgroundStore } from './services/background.store';
+import { BackgroundDialog } from './components/background-dialog/background-dialog';
 import { Link } from './components/link/link';
 import { GroupLink } from './components/group-link/group-link';
 import { GroupDialog, GroupDialogData } from './components/group-dialog/group-dialog';
@@ -38,125 +27,41 @@ const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, GroupLink, DragDropModule, ColorDecoder, OverlayModule],
+  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, GroupLink, DragDropModule, OverlayModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class App implements OnInit, AfterViewInit, OnDestroy {
+export class App implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private confirm = inject(ConfirmService);
   private notify = inject(NotifyService);
   private stats = inject(LinkStatsService);
   readonly data = inject(DataTransferService);
   readonly store = inject(LinksStore);
-  public videoService = inject(VideoService);
+  readonly bg = inject(BackgroundStore);
 
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
-  activeVideo$ = this.videoService.activeVideo$;
-  videos$ = this.videoService.videos$;
-  isVideoMenuOpen = signal(false);
-  iconColor = signal('#ffffff');
-
-  @ViewChild('mainVideo') mainVideo?: ElementRef<HTMLVideoElement>;
-  @ViewChild('mainImage') mainImage?: ElementRef<HTMLImageElement>;
-
-  private animationFrameId?: number;
-  private lastSampleTime = 0;
-  private destroyed = false;
-  private worker!: Worker;
-
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.store.load(), this.stats.load()]);
-  }
-
-  ngAfterViewInit(): void {
-    if (typeof Worker !== 'undefined') {
-      this.worker = new Worker(new URL('./workers/color-extraction.worker', import.meta.url), { type: 'module' });
-
-      this.worker.onmessage = ({ data }) => {
-        const { r, g, b } = data;
-        document.documentElement.style.setProperty('--theme-rgb', `${r}, ${g}, ${b}`);
-      };
-
-      this.extractColorLoop();
-    }
+    await Promise.all([this.store.load(), this.stats.load(), this.bg.load().catch((e) => console.error('Backgrounds failed to load', e))]);
   }
 
   ngOnDestroy(): void {
-    this.destroyed = true;
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = undefined;
-    }
-    if (this.worker) {
-      this.worker.terminate();
-    }
     this.groupDialogRef?.close();
     this.groupDialogRef = null;
   }
 
-  private extractColorLoop = () => {
-    if (this.destroyed) return;
-    if (!this.mainVideo?.nativeElement || !this.worker) {
-      this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
-      return;
-    }
-    const video = this.mainVideo.nativeElement;
-    if (video.readyState >= 2 && !video.paused && !video.ended) {
-      const now = performance.now();
-      if (now - this.lastSampleTime > 500) {
-        this.lastSampleTime = now;
-        this.extractColorFromSource(video);
-      }
-    }
-    this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
-  };
-
-  onImageLoad(event: Event) {
-    this.extractColorFromSource(event.target as HTMLImageElement);
-  }
-
-  private async extractColorFromSource(source: CanvasImageSource) {
-    if (!this.worker) return;
-    try {
-      const imageBitmap = await createImageBitmap(source, { resizeWidth: 64, resizeHeight: 64, resizeQuality: 'low' });
-      this.worker.postMessage({ imageBitmap }, [imageBitmap]);
-    } catch {
-      // Ignore cross-origin errors or empty sources
-    }
-  }
-
-  toggleVideoMenu() {
-    this.isVideoMenuOpen.set(!this.isVideoMenuOpen());
-  }
-
-  async onVideoUploaded(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      try {
-        await this.videoService.addVideo(input.files[0]);
-      } catch (err: any) {
-        this.notify.error(err.message || 'Error uploading video');
-      }
-      input.value = '';
-    }
-  }
-
-  async deleteVideo(id: string, event: Event) {
-    event.stopPropagation();
-    try {
-      await this.videoService.removeVideo(id);
-    } catch (err: any) {
-      this.notify.error(err.message || 'Error deleting video');
-    }
-  }
-
-  async selectVideo(id: string) {
-    await this.videoService.setActiveVideo(id);
+  openBackgrounds(): void {
+    this.dialog.open(BackgroundDialog, {
+      maxWidth: '360px',
+      width: '100%',
+      position: { bottom: '88px', right: '24px' },
+      ariaLabelledBy: 'background-dialog-title',
+      autoFocus: 'first-tabbable',
+    });
   }
 
   // ── links ──────────────────────────────────────────────────────
@@ -219,18 +124,6 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   async drop(event: CdkDragDrop<TopItem[]>): Promise<void> {
     if (event.previousIndex === event.currentIndex) return;
     await this.save((items) => moveTile(items, event.previousIndex, event.currentIndex));
-  }
-
-  updateSettings(settings: Partial<VideoItem>) {
-    this.videoService.updateActiveBackgroundSettings(settings);
-  }
-
-  onBrightnessChange(event: Event) {
-    this.updateSettings({ brightness: parseInt((event.target as HTMLInputElement).value, 10) });
-  }
-
-  onBlurChange(event: Event) {
-    this.updateSettings({ blur: parseInt((event.target as HTMLInputElement).value, 10) });
   }
 
   async onImportData(event: Event): Promise<void> {
