@@ -3,21 +3,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Link } from './link';
 
 describe('Link', () => {
-  let component: Link;
   let fixture: ComponentFixture<Link>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [Link]
-    })
-    .compileComponents();
-
+    await TestBed.configureTestingModule({ imports: [Link] }).compileComponents();
     fixture = TestBed.createComponent(Link);
-    component = fixture.componentInstance;
+    fixture.componentRef.setInput('quickLink', { id: 's1', type: 'Shortcut', name: 'Gmail', url: 'https://mail.google.com', group: null, position: 0 });
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('renders the tile name', () => {
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Gmail');
   });
 });
