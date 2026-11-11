@@ -1,0 +1,100 @@
+<section
+  class="section-column flex h-full flex-col rounded-2xl border border-white/10 bg-black/20"
+  [style.--section-accent]="section().color ? 'var(--' + section().color + ')' : null"
+  [attr.aria-label]="section().name"
+>
+  <header class="section-header flex items-center gap-1 px-3 pt-3 pb-2">
+    <span class="drag-handle flex cursor-grab items-center text-white/40 hover:text-white/80" cdkDragHandle aria-hidden="true">
+      <mat-icon class="!text-lg !size-[18px]">drag_indicator</mat-icon>
+    </span>
+    <button
+      type="button"
+      class="flex min-w-0 items-center gap-2 rounded-md px-1 text-left text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      [attr.aria-expanded]="!section().collapsed"
+      [attr.aria-label]="(section().collapsed ? 'Expand ' : 'Collapse ') + section().name"
+      (click)="toggleCollapsed()"
+    >
+      <span class="accent-dot size-2 shrink-0 rounded-full"></span>
+      <span class="truncate text-xs font-semibold uppercase tracking-wider" data-testid="section-name">{{ section().name }}</span>
+      <span class="rounded-md bg-white/10 px-1.5 text-[11px] text-white/70" data-testid="section-count">{{ section().links.length }}</span>
+    </button>
+
+    <span class="ml-auto flex items-center">
+      <button
+        type="button"
+        class="icon-btn"
+        [attr.aria-label]="'Sort ' + section().name + ': ' + sortLabels[section().sort]"
+        [matMenuTriggerFor]="sortMenu"
+      >
+        <mat-icon class="!text-lg !size-[18px]">sort</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
+        [attr.aria-label]="'Open all links in ' + section().name"
+        [disabled]="section().links.length === 0"
+        (click)="openAll()"
+      >
+        <mat-icon class="!text-lg !size-[18px]">open_in_new</mat-icon>
+      </button>
+      <button type="button" class="icon-btn" [attr.aria-label]="'Section options for ' + section().name" [matMenuTriggerFor]="sectionMenu">
+        <mat-icon class="!text-lg !size-[18px]">more_vert</mat-icon>
+      </button>
+    </span>
+  </header>
+
+  @if (!isManual()) {
+    <p class="px-3 pb-1 text-[11px] text-white/50">Sorted by {{ sortLabels[section().sort] }}</p>
+  }
+
+  @if (!section().collapsed) {
+    <div
+      class="link-list custom-scroll flex min-h-12 flex-1 flex-col gap-1 overflow-y-auto px-2 pb-2"
+      cdkDropList
+      [cdkDropListData]="section().id"
+      [cdkDropListSortingDisabled]="!isManual()"
+      (cdkDropListDropped)="drop($event)"
+    >
+      @for (link of displayed(); track link.id) {
+        <app-link-row cdkDrag [cdkDragData]="link.id" [link]="link" (edit)="editLink(link)" (remove)="removeLink(link)">
+          <div class="row-placeholder" *cdkDragPlaceholder></div>
+        </app-link-row>
+      } @empty {
+        <p class="px-2 py-3 text-center text-xs text-white/40">Drop links here</p>
+      }
+    </div>
+    <button
+      type="button"
+      class="mx-2 mb-2 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs text-white/60 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/70 outline-none"
+      (click)="addLink()"
+    >
+      <mat-icon class="!text-base !size-4">add</mat-icon> Add link
+    </button>
+  }
+</section>
+
+<mat-menu #sortMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
+  @for (mode of sortModes; track mode) {
+    <button mat-menu-item class="!text-white" (click)="setSort(mode)" [attr.aria-checked]="section().sort === mode" role="menuitemradio">
+      <mat-icon class="!text-white">{{ section().sort === mode ? 'check' : '' }}</mat-icon>
+      <span>{{ sortLabels[mode] }}</span>
+    </button>
+  }
+</mat-menu>
+
+<mat-menu #sectionMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
+  <button mat-menu-item class="!text-white" (click)="rename()">Rename</button>
+  <button mat-menu-item class="!text-white" [matMenuTriggerFor]="colorMenu">Colour</button>
+  <button mat-menu-item class="!text-white" (click)="toggleCollapsed()">{{ section().collapsed ? 'Expand' : 'Collapse' }}</button>
+  <button mat-menu-item class="!text-red-400" [disabled]="!canDelete()" (click)="remove()">Delete section</button>
+</mat-menu>
+
+<mat-menu #colorMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
+  <button mat-menu-item class="!text-white" (click)="setColor(undefined)">None</button>
+  @for (accent of accents; track accent; let i = $index) {
+    <button mat-menu-item class="!text-white" (click)="setColor(accent)">
+      <span class="mr-2 inline-block size-3 rounded-full align-middle" [style.background]="'var(--' + accent + ')'"></span>
+      Colour {{ i + 1 }}
+    </button>
+  }
+</mat-menu>

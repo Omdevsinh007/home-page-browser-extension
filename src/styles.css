@@ -37,6 +37,16 @@ body {
     0 30px 80px rgba(0, 0, 0, .22);
 
   --glass-text: rgba(255, 255, 255, .96);
+
+  /* Section accent presets */
+  --accent-1: #60a5fa;
+  --accent-2: #34d399;
+  --accent-3: #fbbf24;
+  --accent-4: #f87171;
+  --accent-5: #a78bfa;
+  --accent-6: #f472b6;
+  --accent-7: #22d3ee;
+  --accent-8: #a3e635;
 }
 
 /* ───────────────────────────────────────────── */
