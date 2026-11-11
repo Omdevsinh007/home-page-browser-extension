@@ -1,10 +1,10 @@
 <div class="relative">
-  <a matRipple matRippleColor="#c9c9c924" [href]="quickLink()!.url" target="_blank" rel="noopener noreferrer"
+  <a matRipple matRippleColor="#c9c9c924" [href]="quickLink().url" (click)="open($event)" target="_blank" rel="noopener noreferrer"
     class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-center relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5">
     <div
       class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5">
-      @if (quickLink()!.url?.startsWith('http')) {
-      <img [src]="'https://www.google.com/s2/favicons?domain=' + quickLink()!.url" [alt]="quickLink()!.name"
+      @if (quickLink().url?.startsWith('http')) {
+      <img [src]="'https://www.google.com/s2/favicons?domain=' + quickLink().url" [alt]="quickLink().name"
         loading="lazy" />
       } @else {
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -16,7 +16,7 @@
       }
     </div>
     <p class="text-center text-white absolute py-2 bottom-0">
-      {{ quickLink()!.name }}
+      {{ quickLink().name }}
     </p>
   </a>
 
@@ -34,6 +34,6 @@
 </div>
 
 <mat-menu #linkMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
-  <button mat-menu-item (click)="edit()" class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-1">Edit shortcut</button>
-  <button mat-menu-item (click)="remove()" class="!text-red-400 hover:!bg-red-400/10 !transition-colors !rounded-lg">Remove</button>
+  <button mat-menu-item (click)="editShortcut.emit()" class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-1">Edit shortcut</button>
+  <button mat-menu-item (click)="removeShortcut.emit()" class="!text-red-400 hover:!bg-red-400/10 !transition-colors !rounded-lg">Remove</button>
 </mat-menu>

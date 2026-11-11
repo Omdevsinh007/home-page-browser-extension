@@ -1,74 +1,63 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
-  DestroyRef,
   ElementRef,
   inject,
   OnDestroy,
   OnInit,
   signal,
   ViewChild,
-  WritableSignal,
-  ChangeDetectionStrategy
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { VideoService, VideoItem } from './services/video.service';
-import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
-import {
-  CdkDragDrop,
-  DragDropModule,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { map, Observable } from 'rxjs';
-import { ColorDecoder } from "color-decoder";
+import { ColorDecoder } from 'color-decoder';
+import { firstValueFrom } from 'rxjs';
+import { VideoService, VideoItem } from './services/video.service';
 import { Link } from './components/link/link';
-import { ShortcutDialog } from './components/shortcut-dialog/shortcut-dialog';
-import { GroupName } from './components/group-name/group-name';
 import { GroupLink } from './components/group-link/group-link';
-import { GroupDialog } from './components/group-dialog/group-dialog';
-import { SaveLinks } from './services/save-links';
-import { Shortcut } from './models/shortcut';
+import { GroupDialog, GroupDialogData } from './components/group-dialog/group-dialog';
+import { LinkDialog, LinkDialogData, LinkDialogResult } from './components/link-dialog/link-dialog';
+import { NameDialog, NameDialogData } from './components/name-dialog/name-dialog';
+import { GroupTile, ShortcutTile, TopItem } from './core/model';
+import { migrateV1toV2, detectShape, unwrap, normalizeV2Items } from './core/migrate';
+import { addGroup, addShortcut, moveTile, removeTile, updateTile } from './core/section-ops';
+import { LinksStore } from './services/links-store';
+import { LinkStatsService } from './services/link-stats.service';
+import { ConfirmService } from './services/confirm.service';
+import { NotifyService } from './services/notify.service';
+
+const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [
-    CommonModule,
-    FormsModule,
-    Link,
-    MatIcon,
-    MatMenuModule,
-    GroupLink,
-    DragDropModule,
-    ColorDecoder,
-    OverlayModule
-  ],
+  imports: [CommonModule, FormsModule, Link, MatIcon, MatMenuModule, GroupLink, DragDropModule, ColorDecoder, OverlayModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class App implements OnInit, AfterViewInit, OnDestroy {
-  private storageService = inject(SaveLinks);
   private dialog = inject(MatDialog);
-  private destroyRef = inject(DestroyRef);
+  private confirm = inject(ConfirmService);
+  private notify = inject(NotifyService);
+  private stats = inject(LinkStatsService);
+  readonly store = inject(LinksStore);
   public videoService = inject(VideoService);
 
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
-  savedLinks$!: Observable<Shortcut[]>;
   activeVideo$ = this.videoService.activeVideo$;
   videos$ = this.videoService.videos$;
   isVideoMenuOpen = signal(false);
   iconColor = signal('#ffffff');
-
-  linksData: WritableSignal<Shortcut[]> = signal([]);
 
   @ViewChild('mainVideo') mainVideo?: ElementRef<HTMLVideoElement>;
   @ViewChild('mainImage') mainImage?: ElementRef<HTMLImageElement>;
@@ -79,29 +68,18 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   private worker!: Worker;
 
   async ngOnInit(): Promise<void> {
-    await this.storageService.retrieveSavedLinks();
-    this.savedLinks$ = this.storageService.getSavedLinks();
-    this.savedLinks$
-      .pipe(
-        map((s) => s.sort((a, b) => a?.position - b?.position)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: (data) => {
-          this.linksData.set(data);
-        },
-      });
+    await Promise.all([this.store.load(), this.stats.load()]);
   }
 
   ngAfterViewInit(): void {
     if (typeof Worker !== 'undefined') {
       this.worker = new Worker(new URL('./workers/color-extraction.worker', import.meta.url), { type: 'module' });
-      
+
       this.worker.onmessage = ({ data }) => {
         const { r, g, b } = data;
         document.documentElement.style.setProperty('--theme-rgb', `${r}, ${g}, ${b}`);
       };
-      
+
       this.extractColorLoop();
     }
   }
@@ -115,56 +93,37 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     if (this.worker) {
       this.worker.terminate();
     }
-    // Close any open group dialog
     this.groupDialogRef?.close();
     this.groupDialogRef = null;
   }
 
   private extractColorLoop = () => {
-    // Stop loop if component has been destroyed (prevents race condition)
     if (this.destroyed) return;
-
-    // Stop loop if no video exists
     if (!this.mainVideo?.nativeElement || !this.worker) {
       this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
       return;
     }
-
     const video = this.mainVideo.nativeElement;
-
-    // Only sample if the video is actually playing and has data
     if (video.readyState >= 2 && !video.paused && !video.ended) {
       const now = performance.now();
-
-      // Throttle to roughly 2 times per second (every 500ms) for high performance
       if (now - this.lastSampleTime > 500) {
         this.lastSampleTime = now;
         this.extractColorFromSource(video);
       }
     }
-
     this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
   };
 
   onImageLoad(event: Event) {
-    const img = event.target as HTMLImageElement;
-    // We do NOT want to cancel the frame loop entirely, otherwise
-    // switching back to a video will leave the loop permanently stopped.
-    this.extractColorFromSource(img);
+    this.extractColorFromSource(event.target as HTMLImageElement);
   }
 
   private async extractColorFromSource(source: CanvasImageSource) {
     if (!this.worker) return;
-
     try {
-      const imageBitmap = await createImageBitmap(source, {
-        resizeWidth: 64,
-        resizeHeight: 64,
-        resizeQuality: 'low'
-      });
-      
+      const imageBitmap = await createImageBitmap(source, { resizeWidth: 64, resizeHeight: 64, resizeQuality: 'low' });
       this.worker.postMessage({ imageBitmap }, [imageBitmap]);
-    } catch (e) {
+    } catch {
       // Ignore cross-origin errors or empty sources
     }
   }
@@ -176,13 +135,12 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   async onVideoUploaded(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
       try {
-        await this.videoService.addVideo(file);
+        await this.videoService.addVideo(input.files[0]);
       } catch (err: any) {
-        alert(err.message || 'Error uploading video');
+        this.notify.error(err.message || 'Error uploading video');
       }
-      input.value = ''; // Reset input
+      input.value = '';
     }
   }
 
@@ -191,7 +149,7 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     try {
       await this.videoService.removeVideo(id);
     } catch (err: any) {
-      alert(err.message || 'Error deleting video');
+      this.notify.error(err.message || 'Error deleting video');
     }
   }
 
@@ -199,64 +157,66 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     await this.videoService.setActiveVideo(id);
   }
 
-  addShortcut() {
-    this.dialog.open(ShortcutDialog, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-    });
+  // ── links ──────────────────────────────────────────────────────
+
+  async addShortcut(): Promise<void> {
+    const result = await this.ask<LinkDialogResult>(LinkDialog, { title: 'Add shortcut' } satisfies LinkDialogData);
+    if (result) await this.save((items) => addShortcut(items, result.name, result.url, Date.now()));
   }
 
-  editShortcut(value: Shortcut) {
-    this.dialog.open(ShortcutDialog, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-      data: value,
-    });
+  async editShortcut(tile: ShortcutTile): Promise<void> {
+    const data: LinkDialogData = { title: 'Edit shortcut', initial: { name: tile.name, url: tile.url } };
+    const result = await this.ask<LinkDialogResult>(LinkDialog, data);
+    if (result) await this.save((items) => updateTile(items, tile.id, result));
   }
 
-  async removeShortcut(id: string) {
-    await this.storageService.removeSavedLink(id);
-  }
-
-  addGroup() {
-    this.dialog.open(GroupName, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-    });
-  }
-
-  openShortcutGroup(shortcut: Shortcut) {
-    this.groupDialogRef = this.dialog.open(GroupDialog, {
-      maxWidth: '70dvw',
-      maxHeight: '70dvh',
-      height: '100%',
-      width: '100%',
-      id: 'dialog-group-overlay',
-      data: {
-        shortcut: shortcut,
-        allGroups: this.linksData().filter(l => l.type === 'Group')
-      },
-      hasBackdrop: true,
-      panelClass: 'group-dialog-panel'
-    });
-
-    // Clean up the ref when dialog is closed
-    this.groupDialogRef.afterClosed()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.groupDialogRef = null;
+  async removeTile(tile: TopItem): Promise<void> {
+    if (tile.type === 'Group') {
+      const count = tile.sections.reduce((n, s) => n + s.links.length, 0);
+      const ok = await this.confirm.ask({
+        title: `Delete group “${tile.name}”?`,
+        message: `This removes the group and its ${count} link${count === 1 ? '' : 's'}.`,
+        confirmText: 'Delete group',
+        danger: true,
       });
+      if (!ok) return;
+    }
+    await this.save((items) => removeTile(items, tile.id));
   }
 
-  async drop(event: CdkDragDrop<Shortcut[]>) {
-    moveItemInArray(this.linksData(), event.previousIndex, event.currentIndex);
-    this.linksData.update((value) =>
-      value.map((data, index) => ({ ...data, position: index })),
-    );
-    await this.storageService.setShortcuts(this.linksData());
+  async addGroup(): Promise<void> {
+    const name = await this.ask<string>(NameDialog, { title: 'New group', label: 'Group name', confirmText: 'Create' } satisfies NameDialogData);
+    if (!name) return;
+    await this.save((items) => addGroup(items, name, Date.now()));
+    const created = this.store.items().at(-1);
+    if (created?.type === 'Group') this.openGroup(created);
+  }
+
+  async renameGroup(tile: GroupTile): Promise<void> {
+    const data: NameDialogData = { title: 'Rename group', label: 'Group name', initial: tile.name, confirmText: 'Save' };
+    const name = await this.ask<string>(NameDialog, data);
+    if (name) await this.save((items) => updateTile(items, tile.id, { name }));
+  }
+
+  openGroup(tile: GroupTile): void {
+    this.groupDialogRef?.close();
+    this.groupDialogRef = this.dialog.open(GroupDialog, {
+      maxWidth: '92dvw',
+      maxHeight: '85dvh',
+      height: '100%',
+      width: '1200px',
+      id: 'dialog-group-overlay',
+      data: { groupId: tile.id } satisfies GroupDialogData,
+      hasBackdrop: true,
+      panelClass: 'group-dialog-panel',
+      ariaLabelledBy: 'group-dialog-title',
+    });
+    this.groupDialogRef.afterClosed().subscribe(() => (this.groupDialogRef = null));
+  }
+
+  async drop(event: CdkDragDrop<TopItem[]>): Promise<void> {
+    if (event.previousIndex === event.currentIndex) return;
+    await this.save((items) => moveTile(items, event.previousIndex, event.currentIndex));
   }
 
   updateSettings(settings: Partial<VideoItem>) {
@@ -264,86 +224,52 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onBrightnessChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.updateSettings({ brightness: parseInt(input.value, 10) });
+    this.updateSettings({ brightness: parseInt((event.target as HTMLInputElement).value, 10) });
   }
 
   onBlurChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.updateSettings({ blur: parseInt(input.value, 10) });
+    this.updateSettings({ blur: parseInt((event.target as HTMLInputElement).value, 10) });
   }
 
+  // Interim export/import on the v2 store; replaced by core/import-export in Task 12.
   exportData() {
-    const data = this.linksData();
-    const dataStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(this.store.items(), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'shortcuts-export.json';
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }
-
-  private isValidShortcutData(data: any): boolean {
-    if (!Array.isArray(data)) return false;
-
-    for (const item of data) {
-      if (!item || typeof item !== 'object') return false;
-      if (typeof item.id !== 'string') return false;
-      if (item.type !== 'Shortcut' && item.type !== 'Group') return false;
-      if (typeof item.position !== 'number') return false;
-
-      if (item.name !== null && typeof item.name !== 'string') return false;
-      if (item.url !== null && typeof item.url !== 'string') return false;
-
-      if (item.group !== null) {
-        if (!Array.isArray(item.group)) return false;
-        for (const g of item.group) {
-          if (!g || typeof g !== 'object') return false;
-          if (typeof g.id !== 'string') return false;
-          if (typeof g.name !== 'string') return false;
-          if (typeof g.url !== 'string') return false;
-          if (typeof g.position !== 'number') return false;
-        }
-      }
-    }
-    return true;
   }
 
   async onImportData(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
-        alert('Invalid file type. Please upload a JSON file.');
-        input.value = '';
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const content = e.target?.result as string;
-          const parsedData = JSON.parse(content);
-
-          if (!this.isValidShortcutData(parsedData)) {
-            throw new Error('Invalid data format. JSON does not match the required schema.');
-          }
-
-          await this.storageService.setShortcuts(parsedData as Shortcut[]);
-          this.linksData.set(parsedData as Shortcut[]);
-        } catch (error) {
-          alert('Error importing data. Please ensure the file is a valid shortcuts export.');
-          console.error('Import error:', error);
-        } finally {
-          input.value = ''; // Reset input
-        }
-      };
-      reader.readAsText(file);
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const shape = detectShape(parsed);
+      const data = unwrap(parsed).data as unknown[];
+      const items = shape === 'v1' ? migrateV1toV2(data).items : shape === 'v2' ? normalizeV2Items(data) : null;
+      if (!items) throw new Error('Invalid file');
+      await this.store.save(items);
+    } catch (error) {
+      console.error('Import error:', error);
+      this.notify.error('Error importing data. Please ensure the file is a valid shortcuts export.');
     }
+  }
+
+  private async save(fn: (items: TopItem[]) => TopItem[]): Promise<void> {
+    try {
+      await this.store.update(fn);
+    } catch (error) {
+      this.notify.error(error instanceof Error ? error.message : 'Could not save changes');
+    }
+  }
+
+  private ask<R>(component: unknown, data: unknown): Promise<R | undefined> {
+    const ref = this.dialog.open(component as never, { ...SMALL_DIALOG, data });
+    return firstValueFrom(ref.afterClosed()) as Promise<R | undefined>;
   }
 }

@@ -8,7 +8,7 @@ describe('GroupLink', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [GroupLink] }).compileComponents();
     fixture = TestBed.createComponent(GroupLink);
-    fixture.componentRef.setInput('quickLink', { id: 'g1', type: 'Group', name: 'Work', url: '', group: [], position: 0 });
+    fixture.componentRef.setInput('quickLink', { id: 'g1', type: 'Group', name: 'Work', position: 0, sections: [{ id: 's', name: 'General', position: 0, sort: 'manual', links: [] }] });
     fixture.detectChanges();
   });
 

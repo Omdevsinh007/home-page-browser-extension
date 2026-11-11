@@ -8,7 +8,7 @@ describe('Link', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [Link] }).compileComponents();
     fixture = TestBed.createComponent(Link);
-    fixture.componentRef.setInput('quickLink', { id: 's1', type: 'Shortcut', name: 'Gmail', url: 'https://mail.google.com', group: null, position: 0 });
+    fixture.componentRef.setInput('quickLink', { id: 's1', type: 'Shortcut', name: 'Gmail', url: 'https://mail.google.com', position: 0 });
     fixture.detectChanges();
   });
 

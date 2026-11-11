@@ -1,33 +1,27 @@
-import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { OverlayModule } from '@angular/cdk/overlay';
-import { Shortcut } from '../../models/shortcut';
-import { GroupName } from '../group-name/group-name';
+import { GroupTile } from '../../core/model';
+import { renumber } from '../../core/positions';
 
 @Component({
   selector: 'app-group-link',
   imports: [MatButtonModule, MatMenuModule, OverlayModule],
   templateUrl: './group-link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './group-link.css'
+  styleUrl: './group-link.css',
 })
 export class GroupLink {
-  quickLink = input<Shortcut>();
-  private dialog = inject(MatDialog);
-  removeLink = output<string>();
+  quickLink = input.required<GroupTile>();
+  open = output<void>();
+  rename = output<void>();
+  removeLink = output<void>();
 
-  editShortcut() {
-    this.dialog.open(GroupName, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-      data: this.quickLink()
-    });
-  }
-
-  removeShortcut() {
-    this.removeLink.emit(this.quickLink()!.id);
-  }
+  /** First four links in section order, same preview as before sections existed. */
+  readonly preview = computed(() =>
+    renumber(this.quickLink().sections)
+      .flatMap((s) => renumber(s.links))
+      .slice(0, 4),
+  );
 }

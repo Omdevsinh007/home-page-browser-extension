@@ -15,21 +15,18 @@
   <div class="container w-full z-10 px-4">
     <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
       (cdkDropListDropped)="drop($event)">
-      @if(linksData() && linksData()!.length > 0) {
-      @for (link of linksData(); track $index) {
+      @for (link of store.items(); track link.id) {
       <div class="!p-4" cdkDrag>
         <div class="custom-shortcut-placeholder rounded-md m-4" *cdkDragPlaceholder>
           <div class="w-28 rounded-md">
           </div>
         </div>
-        @if(link && link.type === "Shortcut") {
-        <app-link [quickLink]="link" (removeShortcut)="removeShortcut($event)" (editShortcut)="editShortcut($event)" />
-        }
-        @if(link && link.type === "Group") {
-        <app-group-link [quickLink]="link" (click)="openShortcutGroup(link)" (removeLink)="removeShortcut($event)" />
+        @if (link.type === "Shortcut") {
+        <app-link [quickLink]="link" (removeShortcut)="removeTile(link)" (editShortcut)="editShortcut(link)" />
+        } @else {
+        <app-group-link [quickLink]="link" (open)="openGroup(link)" (rename)="renameGroup(link)" (removeLink)="removeTile(link)" />
         }
       </div>
-      }
       }
       <div class="flex justify-center py-4">
         <div

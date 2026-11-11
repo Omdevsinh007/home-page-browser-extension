@@ -1,28 +1,25 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { Group, Shortcut } from '../../models/shortcut';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { ShortcutTile } from '../../core/model';
+import { LinkOpenerService } from '../../services/link-opener.service';
 
 @Component({
   selector: 'app-link',
   imports: [MatButtonModule, MatMenuModule],
   templateUrl: './link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './link.css'
+  styleUrl: './link.css',
 })
 export class Link {
-  quickLink = input<Shortcut | Group>();
-  index = input<number>();
-  removeShortcut = output<string>();
-  editShortcut = output<Shortcut>();
-  editIndex = output<number>();
+  private opener = inject(LinkOpenerService);
+  quickLink = input.required<ShortcutTile>();
+  removeShortcut = output<void>();
+  editShortcut = output<void>();
 
-  edit() {
-    this.editShortcut.emit(this.quickLink() as Shortcut);
-    this.editIndex.emit(this.index()!);
-  }
-
-  remove() {
-    this.removeShortcut.emit(this.quickLink()!.id);
+  open(event: MouseEvent): void {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault();
+    void this.opener.open(this.quickLink());
   }
 }
