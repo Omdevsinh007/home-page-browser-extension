@@ -143,6 +143,14 @@ describe('reconcile', () => {
     expect(g1.sections.find((s) => s.id === 'git')).toMatchObject({ color: 'accent-2', sort: 'manual' });
   });
 
+  it('defaults null link names/urls to empty strings and ignores duplicate mirror ids', () => {
+    const m = mirrorOf();
+    m[1].group!.push({ id: 'n1', name: null as unknown as string, url: null as unknown as string, position: 4 });
+    m[1].group!.push({ id: 'n1', name: 'dup', url: 'https://dup', position: 5 });
+    const git = groupOf(reconcile(sample(), m), 'g1').sections.find((s) => s.id === 'git')!;
+    expect(git.links.filter((l) => l.id === 'n1')).toEqual([{ id: 'n1', name: '', url: '', position: 2 }]);
+  });
+
   it('keeps createdAt of surviving shortcuts', () => {
     const m = mirrorOf();
     m[0].name = 'Mail 2';

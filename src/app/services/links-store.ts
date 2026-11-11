@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { flattenToV1 } from '../core/flatten';
 import { stableHash } from '../core/hash';
-import { CURRENT_VERSION, detectShape, migrateV1toV2, unwrap } from '../core/migrate';
+import { CURRENT_VERSION, detectShape, migrateV1toV2, normalizeV2Items, unwrap } from '../core/migrate';
 import { GroupTile, TopItem, V1Shortcut } from '../core/model';
 import { renumber } from '../core/positions';
 import { reconcile } from '../core/reconcile';
@@ -14,9 +14,14 @@ export const KEYS = {
   backupPreImport: 'savedLinks_backup_preimport',
   backupPreReconcile: 'savedLinks_backup_v2_prereconcile',
   quarantine: 'savedLinks_quarantine',
+  backupMirror: 'savedLinks_backup_mirror',
 } as const;
 
-export type LoadStatus = 'loading' | 'ready' | 'readonly-future' | 'corrupt';
+/**
+ * `write-failed`: data loaded but the first write after migration/reconcile failed. Items are shown,
+ * saving is blocked so nothing partial overwrites the stored data.
+ */
+export type LoadStatus = 'loading' | 'ready' | 'readonly-future' | 'corrupt' | 'write-failed';
 
 interface V2Record {
   version: number;
@@ -31,6 +36,8 @@ export class LinksStore {
   private readonly _items = signal<TopItem[]>([]);
   private readonly _status = signal<LoadStatus>('loading');
   private corruptRaw: unknown;
+  /** Bumped on every local write; a load that read before a newer write discards its result. */
+  private writeSeq = 0;
 
   readonly items = this._items.asReadonly();
   readonly status = this._status.asReadonly();
@@ -38,37 +45,43 @@ export class LinksStore {
 
   constructor() {
     const off = this.storage.onChange((keys) => {
-      if (keys.includes(KEYS.v2) && this._status() !== 'loading') void this.load();
+      if (keys.includes(KEYS.v2) && this._status() === 'ready') void this.load();
     });
     inject(DestroyRef).onDestroy(off);
   }
 
   async load(): Promise<void> {
-    const raw = await this.storage.getMany([KEYS.v2, KEYS.v1, KEYS.backupV1]);
+    const seq = this.writeSeq;
+    const raw = await this.storage.getMany([KEYS.v2, KEYS.v1, KEYS.backupV1, KEYS.quarantine]);
+    if (seq !== this.writeSeq) return; // a local save happened while reading: our state is newer
     const v2Raw = raw[KEYS.v2];
     const mirrorRaw = raw[KEYS.v1];
 
-    if (v2Raw !== undefined) {
+    if (v2Raw !== undefined && v2Raw !== null) {
       const shape = detectShape(v2Raw);
       if (shape === 'future') return this.readonly(unwrap(v2Raw).data);
       if (shape === 'corrupt') return this.corrupt(v2Raw);
       const record = v2Raw as V2Record;
-      const data = shape === 'empty' ? [] : record.data;
-      const mirrorShape = detectShape(mirrorRaw);
-      const mirrorData = (mirrorShape === 'v1' || mirrorShape === 'empty' ? unwrap(mirrorRaw).data ?? [] : null) as
-        | V1Shortcut[]
-        | null;
+      const data = shape === 'empty' ? [] : normalizeV2Items(record.data);
 
-      if (mirrorData && stableHash(mirrorData) !== record.mirrorHash) {
-        // v2.6.0 edited the flat mirror: merge its edits back.
+      const mirrorPresent = mirrorRaw !== undefined && mirrorRaw !== null;
+      const mirrorShape = mirrorPresent ? detectShape(mirrorRaw) : null;
+      const mirrorUsable = mirrorShape === 'v1' || mirrorShape === 'empty';
+
+      if (mirrorUsable) {
+        const mirrorData = (unwrap(mirrorRaw).data ?? []) as V1Shortcut[];
+        if (stableHash(mirrorData) === record.mirrorHash) {
+          this._items.set(renumber(data));
+          this._status.set('ready');
+          return;
+        }
+        // v2.6.0 edited the flat mirror: merge its edits back, after backing up v2.
         await this.storage.setMany({ [KEYS.backupPreReconcile]: v2Raw });
-        this._status.set('ready');
-        return this.persist(reconcile(data, mirrorData));
+        return this.persistOnLoad(reconcile(data, mirrorData));
       }
-      this._items.set(renumber(data));
-      this._status.set('ready');
-      if (!mirrorData) await this.persist(data); // mirror missing/corrupt: rewrite it
-      return;
+      // Mirror missing, corrupt, or not v1: keep it if present, then rewrite it from v2.
+      if (mirrorPresent) await this.storage.setMany({ [KEYS.backupMirror]: mirrorRaw });
+      return this.persistOnLoad(data);
     }
 
     const shape = detectShape(mirrorRaw);
@@ -82,16 +95,18 @@ export class LinksStore {
       case 'corrupt':
         return this.corrupt(mirrorRaw);
       case 'v2':
-        this._status.set('ready');
-        return this.persist(unwrap(mirrorRaw).data as TopItem[]);
+        return this.persistOnLoad(normalizeV2Items(unwrap(mirrorRaw).data as unknown[]));
       case 'v1': {
         const { items, quarantine } = migrateV1toV2(unwrap(mirrorRaw).data as unknown[]);
         const backup: Record<string, unknown> = {};
         if (raw[KEYS.backupV1] === undefined) backup[KEYS.backupV1] = mirrorRaw;
-        if (quarantine.length) backup[KEYS.quarantine] = quarantine;
+        if (quarantine.length) {
+          const existing = Array.isArray(raw[KEYS.quarantine]) ? (raw[KEYS.quarantine] as unknown[]) : [];
+          const seen = new Set(existing.map((q) => JSON.stringify(q)));
+          backup[KEYS.quarantine] = [...existing, ...quarantine.filter((q) => !seen.has(JSON.stringify(q)))];
+        }
         if (Object.keys(backup).length) await this.storage.setMany(backup);
-        this._status.set('ready');
-        return this.persist(items);
+        return this.persistOnLoad(items);
       }
     }
   }
@@ -109,10 +124,23 @@ export class LinksStore {
     return this.corruptRaw;
   }
 
+  /** First write during load. Status becomes ready only after it succeeds. */
+  private async persistOnLoad(next: TopItem[]): Promise<void> {
+    try {
+      await this.persist(next);
+      this._status.set('ready');
+    } catch (error) {
+      console.error('Could not save migrated links', error);
+      this._items.set(renumber(next));
+      this._status.set('write-failed');
+    }
+  }
+
   private async persist(next: TopItem[]): Promise<void> {
     const items = renumber(next);
     const mirror = flattenToV1(items);
     const record: V2Record = { version: CURRENT_VERSION, data: items, mirrorHash: stableHash(mirror) };
+    this.writeSeq++;
     await this.storage.setMany({ [KEYS.v2]: record, [KEYS.v1]: { version: 1, data: mirror } });
     this._items.set(items);
   }

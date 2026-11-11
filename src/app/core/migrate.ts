@@ -87,3 +87,14 @@ export function migrateV1toV2(
 
   return { items: renumber(items), quarantine };
 }
+
+/** Makes every item of v2-detected data valid v2: v1-shaped groups (no `sections`) go through the v1 rule. */
+export function normalizeV2Items(data: unknown[], newId: () => string = () => crypto.randomUUID()): TopItem[] {
+  return data.map((raw) => {
+    const item = raw as Record<string, unknown>;
+    if (item['type'] === 'Group' && !Array.isArray(item['sections'])) {
+      return migrateV1toV2([item], newId).items[0];
+    }
+    return raw as TopItem;
+  });
+}

@@ -20,7 +20,10 @@ export function reconcile(v2: TopItem[], mirror: V1Shortcut[], newId: () => stri
       continue;
     }
 
-    const mirrorLinks = renumber(m.group ?? []);
+    const seen = new Set<string>();
+    const mirrorLinks = renumber(m.group ?? [])
+      .filter((l) => !seen.has(l.id) && seen.add(l.id))
+      .map((l) => ({ ...l, name: l.name ?? '', url: l.url ?? '' }));
     if (prev?.type !== 'Group') {
       merged.push({
         ...base,
