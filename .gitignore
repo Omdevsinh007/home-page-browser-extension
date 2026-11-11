@@ -47,3 +47,6 @@ Thumbs.db
 # Environments folder
 src/environments/*
 !src/environments/environment.ts
+
+# Brainstorm companion
+.superpowers/
