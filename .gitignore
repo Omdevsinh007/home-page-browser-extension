@@ -44,9 +44,6 @@ Thumbs.db
 #.vscode folder
 .vscode/*
 
-# Environments folder
-src/environments/*
-!src/environments/environment.ts
 
 # Brainstorm companion
 .superpowers/

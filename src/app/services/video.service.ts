@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 
 export interface VideoItem {
   id: string;
@@ -23,6 +22,8 @@ export class VideoService {
   private activeVideoSubject = new BehaviorSubject<VideoItem | null>(null);
   activeVideo$ = this.activeVideoSubject.asObservable();
 
+  private readonly useChromeStorage = typeof chrome !== 'undefined' && !!chrome.storage?.local;
+
   private defaultVideoUrl = 'assets/default-video.mp4'; // Fallback if no video exists
 
   constructor() {
@@ -31,7 +32,7 @@ export class VideoService {
 
   private async initVideos() {
     let storedVideos: VideoItem[] = [];
-    if (environment.isProd) {
+    if (this.useChromeStorage) {
       storedVideos = await this.getFromChromeStorage();
     } else {
       storedVideos = this.getFromLocalStorage();
@@ -120,7 +121,7 @@ export class VideoService {
   }
 
   private async saveVideos(videos: VideoItem[]): Promise<void> {
-    if (environment.isProd) {
+    if (this.useChromeStorage) {
       await this.saveToChromeStorage(videos);
     } else {
       this.saveToLocalStorage(videos);

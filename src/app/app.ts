@@ -1,7 +1,6 @@
 import {
   AfterViewInit,
   Component,
-  computed,
   CUSTOM_ELEMENTS_SCHEMA,
   DestroyRef,
   ElementRef,
@@ -26,7 +25,7 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import { OverlayModule } from '@angular/cdk/overlay';
-import { map, Observable, ReplaySubject } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ColorDecoder } from "color-decoder";
 import { Link } from './components/link/link';
 import { ShortcutDialog } from './components/shortcut-dialog/shortcut-dialog';
@@ -35,7 +34,6 @@ import { GroupLink } from './components/group-link/group-link';
 import { GroupDialog } from './components/group-dialog/group-dialog';
 import { SaveLinks } from './services/save-links';
 import { Shortcut } from './models/shortcut';
-import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -64,15 +62,11 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
-  protected environment = environment;
-
   savedLinks$!: Observable<Shortcut[]>;
   activeVideo$ = this.videoService.activeVideo$;
   videos$ = this.videoService.videos$;
   isVideoMenuOpen = signal(false);
   iconColor = signal('#ffffff');
-
-  videoPoster = computed(() => this.environment.poster);
 
   linksData: WritableSignal<Shortcut[]> = signal([]);
 
@@ -85,13 +79,8 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   private worker!: Worker;
 
   async ngOnInit(): Promise<void> {
-    if (this.environment.isProd) {
-      await this.storageService.retrieveSavedLinks();
-      this.savedLinks$ = this.storageService.getSavedLinks();
-    } else {
-      this.savedLinks$ = new ReplaySubject<Shortcut[]>(1);
-      this.loadDataForDev(this.savedLinks$);
-    }
+    await this.storageService.retrieveSavedLinks();
+    this.savedLinks$ = this.storageService.getSavedLinks();
     this.savedLinks$
       .pipe(
         map((s) => s.sort((a, b) => a?.position - b?.position)),
@@ -102,10 +91,6 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
           this.linksData.set(data);
         },
       });
-  }
-
-  loadDataForDev(data: any) {
-    data.next(this.environment.dummyData);
   }
 
   ngAfterViewInit(): void {
