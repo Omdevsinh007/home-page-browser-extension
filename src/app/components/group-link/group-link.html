@@ -9,13 +9,13 @@
       </div>
     </div>
     }
-    <p class="text-center text-white absolute py-2 bottom-0">
+    <p class="text-center text-white absolute py-2 bottom-0 line-clamp-2 px-1" [title]="quickLink().name">
       {{ quickLink().name }}
     </p>
   </div>
 
   <div class="absolute top-1 right-1 z-10">
-    <button class="menu-trigger-btn" [matMenuTriggerFor]="groupLinkMenu" (click)="$event.stopPropagation()">
+    <button type="button" class="menu-trigger-btn" [attr.aria-label]="'Options for ' + quickLink().name" [matMenuTriggerFor]="groupLinkMenu" (click)="$event.stopPropagation()">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />

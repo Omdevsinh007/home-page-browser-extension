@@ -12,6 +12,11 @@
   }
 
   <div class="container w-full z-10 px-4">
+    @switch (store.status()) {
+    @case ('readonly-future') { <p role="status" class="mb-4 rounded-lg bg-amber-500/80 px-4 py-2 text-center text-white">Your links were saved by a newer version. Editing is disabled.</p> }
+    @case ('corrupt') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Saved links could not be read. Nothing was overwritten.</p> }
+    @case ('write-failed') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Could not save your links. Changes may be lost.</p> }
+    }
     <app-search-box class="relative z-30 mb-6" />
     <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
       (cdkDropListDropped)="drop($event)">
@@ -31,19 +36,19 @@
       <div class="flex justify-center py-4">
         <div
           class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95">
-          <div matRipple
+          <button type="button" aria-label="Add shortcut or group"
             class="w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-white/20 transition-all duration-300 shadow-sm"
             [matMenuTriggerFor]="addMenu">
             <mat-icon class="!text-white">add</mat-icon>
-          </div>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Data Management Floating Button (Invisible until hover) -->
-  <div class="absolute top-6 right-6 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300 flex gap-2">
-    <button
+  <div class="absolute top-6 right-6 z-50 opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 flex gap-2">
+    <button type="button" aria-label="Settings"
       class="glass-button hover:cursor-pointer w-10 h-10 rounded-full flex justify-center items-center group shadow-sm bg-white/10 backdrop-blur-md"
       [matMenuTriggerFor]="dataMenu">
       <mat-icon class="text-white group-hover:rotate-90 transition-transform">more_vert</mat-icon>
