@@ -3,12 +3,13 @@ import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { LinkItem } from '../../core/model';
 import { hostnameOf } from '../../core/url';
+import { Favicon } from '../favicon/favicon';
 import { LinkOpenerService } from '../../services/link-opener.service';
 
 /** Compact link row inside a section column. Plain left click opens via the opener (counts the use). */
 @Component({
   selector: 'app-link-row',
-  imports: [MatMenuModule, MatIcon],
+  imports: [MatMenuModule, MatIcon, Favicon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[attr.data-id]': 'link().id', class: 'block' },
   template: `
@@ -21,11 +22,7 @@ import { LinkOpenerService } from '../../services/link-opener.service';
         class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-lg"
       >
         <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10">
-          @if (isWeb()) {
-            <img [src]="'https://www.google.com/s2/favicons?domain=' + link().url" alt="" class="size-4" loading="lazy" />
-          } @else {
-            <span class="text-[11px] font-semibold">{{ initial() }}</span>
-          }
+          <app-favicon [url]="link().url" [name]="link().name" />
         </span>
         <span class="truncate" [title]="link().name">{{ link().name }}</span>
         @if (host()) {
@@ -54,8 +51,6 @@ export class LinkRow {
   readonly remove = output<void>();
 
   readonly host = computed(() => hostnameOf(this.link().url).replace(/^www\./, ''));
-  readonly isWeb = computed(() => /^https?:/i.test(this.link().url));
-  readonly initial = computed(() => (this.link().name.trim()[0] ?? '?').toUpperCase());
 
   open(event: MouseEvent): void {
     // Keep native behaviour for middle/modified clicks (new tab / window).

@@ -3,17 +3,7 @@
     class="transition-all duration-300 ease-in-out cursor-pointer hover:cursor-pointer w-28 h-36 rounded-md backdrop-blur-lg bg-white/10 flex justify-center items-center relative group hover:backdrop-blur-lg hover:bg-white/5 pb-3.5">
     <div
       class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5">
-      @if (quickLink().url?.startsWith('http')) {
-      <img [src]="'https://www.google.com/s2/favicons?domain=' + quickLink().url" [alt]="quickLink().name"
-        loading="lazy" />
-      } @else {
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-      </svg>
-      }
+      <app-favicon [url]="quickLink().url" [name]="quickLink().name" [displaySize]="20" />
     </div>
     <p class="text-center text-white absolute py-2 bottom-0">
       {{ quickLink().name }}

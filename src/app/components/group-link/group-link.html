@@ -5,7 +5,7 @@
     <div class="w-1/2 flex justify-center items-center">
       <div
         class="transition-all duration-300 ease-in-out w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-black/5">
-        <img [src]="'https://www.google.com/s2/favicons?domain=' + link.url" />
+        <app-favicon [url]="link.url" [name]="link.name" [displaySize]="20" />
       </div>
     </div>
     }

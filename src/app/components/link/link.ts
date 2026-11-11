@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { Favicon } from '../favicon/favicon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { ShortcutTile } from '../../core/model';
@@ -6,7 +7,7 @@ import { LinkOpenerService } from '../../services/link-opener.service';
 
 @Component({
   selector: 'app-link',
-  imports: [MatButtonModule, MatMenuModule],
+  imports: [Favicon, MatButtonModule, MatMenuModule],
   templateUrl: './link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './link.css',

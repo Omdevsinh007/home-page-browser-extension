@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
+import { Favicon } from '../favicon/favicon';
 import { SearchEntry, buildIndex, search } from '../../core/search';
 import { LinkOpenerService } from '../../services/link-opener.service';
 import { LinkStatsService } from '../../services/link-stats.service';
@@ -19,7 +20,7 @@ function isEditable(el: Element | null): boolean {
 /** One search box for every link (spec §7). `/` or Ctrl/Cmd+K focuses it. */
 @Component({
   selector: 'app-search-box',
-  imports: [MatIcon],
+  imports: [MatIcon, Favicon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown)': 'onDocumentKey($event)', class: 'block' },
   templateUrl: './search-box.html',
