@@ -27,12 +27,12 @@ import { LinkDialog, LinkDialogData, LinkDialogResult } from './components/link-
 import { NameDialog, NameDialogData } from './components/name-dialog/name-dialog';
 import { SearchBox } from './components/search-box/search-box';
 import { GroupTile, ShortcutTile, TopItem } from './core/model';
-import { migrateV1toV2, detectShape, unwrap, normalizeV2Items } from './core/migrate';
 import { addGroup, addShortcut, moveTile, removeTile, updateTile } from './core/section-ops';
 import { LinksStore } from './services/links-store';
 import { LinkStatsService } from './services/link-stats.service';
 import { ConfirmService } from './services/confirm.service';
 import { NotifyService } from './services/notify.service';
+import { DataTransferService } from './services/data-transfer.service';
 
 const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
@@ -49,6 +49,7 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private notify = inject(NotifyService);
   private stats = inject(LinkStatsService);
+  readonly data = inject(DataTransferService);
   readonly store = inject(LinksStore);
   public videoService = inject(VideoService);
 
@@ -232,33 +233,11 @@ export class App implements OnInit, AfterViewInit, OnDestroy {
     this.updateSettings({ blur: parseInt((event.target as HTMLInputElement).value, 10) });
   }
 
-  // Interim export/import on the v2 store; replaced by core/import-export in Task 12.
-  exportData() {
-    const blob = new Blob([JSON.stringify(this.store.items(), null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'shortcuts-export.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async onImportData(event: Event) {
+  async onImportData(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file) return;
-    try {
-      const parsed = JSON.parse(await file.text());
-      const shape = detectShape(parsed);
-      const data = unwrap(parsed).data as unknown[];
-      const items = shape === 'v1' ? migrateV1toV2(data).items : shape === 'v2' ? normalizeV2Items(data) : null;
-      if (!items) throw new Error('Invalid file');
-      await this.store.save(items);
-    } catch (error) {
-      console.error('Import error:', error);
-      this.notify.error('Error importing data. Please ensure the file is a valid shortcuts export.');
-    }
+    if (file) await this.data.importText(await file.text());
   }
 
   private async save(fn: (items: TopItem[]) => TopItem[]): Promise<void> {

@@ -200,6 +200,33 @@ describe('LinksStore review fixes', () => {
   });
 });
 
+describe('LinksStore import + backups', () => {
+  it('importReplace backs up the current data, then saves the new items', async () => {
+    const { fake, store } = setup({ [KEYS.v1]: v1RealShapeWrapped });
+    await store.load();
+    const before = structuredClone(fake.data[KEYS.v2]);
+    await store.importReplace([{ id: 'n', type: 'Shortcut', name: 'N', url: 'https://n', position: 0 }]);
+    expect(fake.data[KEYS.backupPreImport]).toEqual(before);
+    expect(store.items().map((i) => i.id)).toEqual(['n']);
+  });
+
+  it('importReplace does not save when the backup write fails', async () => {
+    const { fake, store } = setup({ [KEYS.v1]: v1RealShapeWrapped });
+    await store.load();
+    fake.failNextSet = true;
+    await expect(store.importReplace([])).rejects.toThrow();
+    expect(store.items()).toHaveLength(9);
+  });
+
+  it('readBackups returns only the backup keys that exist', async () => {
+    const { store } = setup({ [KEYS.v1]: v1RealShapeWrapped });
+    await store.load();
+    const backups = await store.readBackups();
+    expect(Object.keys(backups)).toEqual([KEYS.backupV1]);
+    expect(backups[KEYS.backupV1]).toEqual(v1RealShapeWrapped);
+  });
+});
+
 describe('LinksStore cross-tab changes', () => {
   it('reloads when another tab writes savedLinks_v2', async () => {
     const { fake, store } = setup({});

@@ -120,6 +120,20 @@ export class LinksStore {
     return this.save(fn(this._items()));
   }
 
+  /** Replaces everything with imported items, after copying the current v2 record to the pre-import backup. */
+  async importReplace(next: TopItem[]): Promise<void> {
+    if (this._status() !== 'ready') throw new Error('Links are read-only');
+    const current = (await this.storage.getMany([KEYS.v2]))[KEYS.v2];
+    if (current !== undefined) await this.storage.setMany({ [KEYS.backupPreImport]: current });
+    await this.persist(next);
+  }
+
+  /** Backups that exist, keyed by storage key, for "Download backup". */
+  async readBackups(): Promise<Record<string, unknown>> {
+    const keys = [KEYS.backupV1, KEYS.backupPreImport, KEYS.backupPreReconcile, KEYS.backupMirror, KEYS.quarantine];
+    return this.storage.getMany(keys);
+  }
+
   async rawForExport(): Promise<unknown> {
     return this.corruptRaw;
   }

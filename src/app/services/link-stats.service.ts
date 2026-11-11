@@ -16,6 +16,11 @@ export class LinkStatsService {
     if (raw?.data && typeof raw.data === 'object') this._stats.set(raw.data);
   }
 
+  async replace(stats: Record<string, LinkStat>): Promise<void> {
+    this._stats.set({ ...stats });
+    await this.storage.setMany({ [STATS_KEY]: { version: 1, data: stats } });
+  }
+
   async record(ids: string[], now = Date.now()): Promise<void> {
     const next = { ...this._stats() };
     for (const id of ids) next[id] = { count: (next[id]?.count ?? 0) + 1, lastOpenedAt: now };
