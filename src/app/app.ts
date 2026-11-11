@@ -25,6 +25,7 @@ import { GroupLink } from './components/group-link/group-link';
 import { GroupDialog, GroupDialogData } from './components/group-dialog/group-dialog';
 import { LinkDialog, LinkDialogData, LinkDialogResult } from './components/link-dialog/link-dialog';
 import { NameDialog, NameDialogData } from './components/name-dialog/name-dialog';
+import { SearchBox } from './components/search-box/search-box';
 import { GroupTile, ShortcutTile, TopItem } from './core/model';
 import { migrateV1toV2, detectShape, unwrap, normalizeV2Items } from './core/migrate';
 import { addGroup, addShortcut, moveTile, removeTile, updateTile } from './core/section-ops';
@@ -37,7 +38,7 @@ const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Link, MatIcon, MatMenuModule, GroupLink, DragDropModule, ColorDecoder, OverlayModule],
+  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, GroupLink, DragDropModule, ColorDecoder, OverlayModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

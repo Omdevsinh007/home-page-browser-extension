@@ -13,6 +13,7 @@
   }
 
   <div class="container w-full z-10 px-4">
+    <app-search-box class="relative z-30 mb-6" />
     <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
       (cdkDropListDropped)="drop($event)">
       @for (link of store.items(); track link.id) {
