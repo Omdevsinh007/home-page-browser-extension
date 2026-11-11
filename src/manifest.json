@@ -8,11 +8,8 @@
   },
   "permissions": [
     "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "https://*/*",
-    "file:///*"
+    "tabs",
+    "favicon"
   ],
   "icons": {
     "16": "assets/images/favicon16x16.ico",
