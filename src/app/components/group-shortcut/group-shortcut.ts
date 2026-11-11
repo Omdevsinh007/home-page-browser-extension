@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatInput } from '@angular/material/input';
 import { Shortcut } from '../../models/shortcut';
 import { SaveLinks } from '../../services/save-links';
+import { isBlank, normalizeUrl } from '../../core/url';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { firstValueFrom } from 'rxjs';
 
@@ -97,23 +98,10 @@ export class GroupShortcut {
   }
 
   checkForEmptySpaces(control: AbstractControl): ValidationErrors | null {
-    const value = control.value || '';
-    if (typeof value === 'string' && value.trim() === '') {
-      return { whitespace: true };
-    }
-    return null;
+    return isBlank(control.value) ? { whitespace: true } : null;
   }
 
   modifyUrl(url: string) {
-    // Check if it's a system file path (Windows or Unix style)
-    const isSystemPath = /^[a-zA-Z]:\\|^[a-zA-Z]:\/|^\/|^\./.test(url);
-    // Check if it's a protocol (http, https, file, chrome, etc.)
-    const hasProtocol = /^[a-z0-9+.-]+:\/\//i.test(url) || /^about:/i.test(url);
-
-    if (!isSystemPath && !hasProtocol) {
-      url = 'https://' + url;
-    }
-
-    return url;
+    return normalizeUrl(url);
   }
 }
