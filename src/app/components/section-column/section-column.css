@@ -1,9 +1,12 @@
 .section-column {
-  border-top: 3px solid var(--section-accent, rgba(255, 255, 255, 0.12));
+  background: var(--glass-fill-faint);
+  border: var(--glass-stroke);
+  border-top: 3px solid var(--section-accent, var(--glass-fill-strong));
+  border-radius: var(--radius-column);
 }
 
 .accent-dot {
-  background: var(--section-accent, rgba(255, 255, 255, 0.35));
+  background: var(--section-accent, var(--text-dim));
 }
 
 .icon-btn {
@@ -12,19 +15,19 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 9999px;
-  color: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-pill);
+  color: var(--text-dim);
   cursor: pointer;
   outline: none;
 }
 
 .icon-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass-fill-strong);
+  color: var(--text);
 }
 
 .icon-btn:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .icon-btn:disabled {
@@ -33,9 +36,9 @@
 }
 
 .row-placeholder {
-  height: 36px;
-  border-radius: 8px;
-  border: 2px dashed rgba(255, 255, 255, 0.35);
+  height: 38px;
+  border-radius: var(--radius-row);
+  border: 1px dashed var(--text-dim);
 }
 
 .custom-scroll::-webkit-scrollbar {
@@ -43,7 +46,7 @@
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--glass-fill-strong);
   border-radius: 10px;
 }
 

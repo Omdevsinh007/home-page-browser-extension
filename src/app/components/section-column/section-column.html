@@ -1,5 +1,5 @@
 <section
-  class="section-column flex h-full flex-col rounded-2xl border border-white/10 bg-black/20"
+  class="section-column flex h-full flex-col"
   [style.--section-accent]="section().color ? 'var(--' + section().color + ')' : null"
   [attr.aria-label]="section().name"
 >
@@ -73,9 +73,9 @@
   }
 </section>
 
-<mat-menu #sortMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
+<mat-menu #sortMenu="matMenu" class="glass-menu">
   @for (mode of sortModes; track mode) {
-    <button mat-menu-item class="!text-white" (click)="setSort(mode)" [attr.aria-checked]="section().sort === mode" role="menuitemradio">
+    <button mat-menu-item (click)="setSort(mode)" [attr.aria-checked]="section().sort === mode" role="menuitemradio">
       @if (section().sort === mode) {
         <mat-icon class="!text-white" svgIcon="check" />
       } @else {
@@ -86,17 +86,17 @@
   }
 </mat-menu>
 
-<mat-menu #sectionMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
-  <button mat-menu-item class="!text-white" (click)="rename()">Rename</button>
-  <button mat-menu-item class="!text-white" [matMenuTriggerFor]="colorMenu">Colour</button>
-  <button mat-menu-item class="!text-white" (click)="toggleCollapsed()">{{ section().collapsed ? 'Expand' : 'Collapse' }}</button>
-  <button mat-menu-item class="!text-red-400" [disabled]="!canDelete()" (click)="remove()">Delete section</button>
+<mat-menu #sectionMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="rename()">Rename</button>
+  <button mat-menu-item [matMenuTriggerFor]="colorMenu">Colour</button>
+  <button mat-menu-item (click)="toggleCollapsed()">{{ section().collapsed ? 'Expand' : 'Collapse' }}</button>
+  <button mat-menu-item class="danger" [disabled]="!canDelete()" (click)="remove()">Delete section</button>
 </mat-menu>
 
-<mat-menu #colorMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
-  <button mat-menu-item class="!text-white" (click)="setColor(undefined)">None</button>
+<mat-menu #colorMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="setColor(undefined)">None</button>
   @for (accent of accents; track accent; let i = $index) {
-    <button mat-menu-item class="!text-white" (click)="setColor(accent)">
+    <button mat-menu-item (click)="setColor(accent)">
       <span class="mr-2 inline-block size-3 rounded-full align-middle" [style.background]="'var(--' + accent + ')'"></span>
       Colour {{ i + 1 }}
     </button>

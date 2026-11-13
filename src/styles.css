@@ -41,6 +41,53 @@ body {
   isolation: isolate;
 }
 
+/* Material menus in the glass material */
+.mat-mdc-menu-panel.glass-menu {
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: var(--glass-stroke);
+  border-radius: var(--radius-popover) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+  padding: 4px;
+  min-width: 160px;
+}
+
+.glass-menu .mat-mdc-menu-item {
+  min-height: 36px;
+  border-radius: var(--radius-row);
+  color: var(--text);
+  --mat-menu-item-label-text-color: var(--text);
+  --mat-menu-item-label-text-font: var(--font);
+  --mat-menu-item-label-text-size: var(--text-sm);
+  --mat-menu-item-icon-color: var(--text-dim);
+}
+
+.glass-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background: var(--glass-fill-strong);
+}
+
+.glass-menu .mat-mdc-menu-item.danger {
+  --mat-menu-item-label-text-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Snackbars in the glass material */
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: var(--glass-stroke);
+  border-radius: var(--radius-popover) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  --mat-snack-bar-supporting-text-color: var(--text);
+  --mat-snack-bar-button-color: var(--text);
+  --mat-snack-bar-supporting-text-font: var(--font);
+}
+
 /* Dialog backdrop tint */
 .cdk-overlay-dark-backdrop {
   background: var(--backdrop) !important;

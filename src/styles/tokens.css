@@ -8,6 +8,7 @@
   --glass-fill: rgba(255, 255, 255, 0.14);
   --glass-fill-strong: rgba(255, 255, 255, 0.22);
   --glass-fill-dark: rgba(30, 30, 36, 0.40);
+  --glass-fill-faint: rgba(255, 255, 255, 0.08);
   /* Search sits on a darker fill so its placeholder stays readable over bright wallpaper. */
   --glass-fill-search: rgba(30, 30, 36, 0.50);
   --glass-filter: blur(30px) saturate(180%);

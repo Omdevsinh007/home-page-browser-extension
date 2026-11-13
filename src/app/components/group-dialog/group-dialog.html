@@ -68,12 +68,12 @@
   </div>
 </div>
 
-<mat-menu #groupMenu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
-  <button mat-menu-item class="!text-white" (click)="renameGroup()">Rename group</button>
+<mat-menu #groupMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="renameGroup()">Rename group</button>
   @for (section of sections(); track section.id; let i = $index) {
     @if (i > 0) {
-      <button mat-menu-item class="!text-white" (click)="moveSectionBy(section.id, -1)">Move “{{ section.name }}” left</button>
+      <button mat-menu-item (click)="moveSectionBy(section.id, -1)">Move “{{ section.name }}” left</button>
     }
   }
-  <button mat-menu-item class="!text-red-400" (click)="deleteGroup()">Delete group</button>
+  <button mat-menu-item class="danger" (click)="deleteGroup()">Delete group</button>
 </mat-menu>

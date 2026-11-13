@@ -13,7 +13,7 @@ import { LinkOpenerService } from '../../services/link-opener.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[attr.data-id]': 'link().id', class: 'block' },
   template: `
-    <div class="group/row relative flex items-center rounded-lg bg-white/5 hover:bg-white/10 focus-within:bg-white/10 transition-colors">
+    <div class="group/row relative flex min-h-[38px] items-center rounded-[var(--radius-row)] bg-[var(--glass-fill-faint)] hover:bg-[var(--glass-fill-strong)] focus-within:bg-[var(--glass-fill-strong)] transition-colors">
       <a
         [href]="link().url"
         target="_blank"
@@ -35,12 +35,12 @@ import { LinkOpenerService } from '../../services/link-opener.service';
         [attr.aria-label]="'Options for ' + link().name"
         [matMenuTriggerFor]="menu"
       >
-        <mat-icon class="!text-lg !size-[18px]">more_vert</mat-icon>
+        <mat-icon class="!size-[18px]" svgIcon="more_horiz" />
       </button>
     </div>
-    <mat-menu #menu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
-      <button mat-menu-item class="!text-white" (click)="edit.emit()">Edit link</button>
-      <button mat-menu-item class="!text-red-400" (click)="remove.emit()">Delete</button>
+    <mat-menu #menu="matMenu" class="glass-menu">
+      <button mat-menu-item (click)="edit.emit()">Edit link</button>
+      <button mat-menu-item class="danger" (click)="remove.emit()">Delete</button>
     </mat-menu>
   `,
 })

@@ -39,39 +39,40 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-radius: 16px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-column);
+  border: 1px dashed var(--text-dim);
+  color: var(--text-dim);
   cursor: pointer;
   outline: none;
 }
 
 .add-section:hover,
 .add-section:focus-visible {
-  border-color: rgba(255, 255, 255, 0.55);
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  background: var(--glass-fill-faint);
 }
 
+/* Small glass pill buttons in the dialog header */
 .dialog-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  color: rgba(255, 255, 255, 0.7);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-fill);
+  border: var(--glass-stroke);
+  color: var(--text);
   cursor: pointer;
   outline: none;
 }
 
 .dialog-icon-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-fill-strong);
 }
 
 .dialog-icon-btn:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .custom-scroll::-webkit-scrollbar {
@@ -80,7 +81,7 @@
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--glass-fill-strong);
   border-radius: 10px;
 }
 
