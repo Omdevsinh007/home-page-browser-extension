@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "check:styles": "node scripts/check-styles.mjs"
   },
   "private": true,
   "dependencies": {
@@ -19,7 +20,6 @@
     "@angular/material": "^22.0.1",
     "@angular/platform-browser": "^22.0.1",
     "@angular/router": "^22.0.1",
-    "@fontsource/roboto": "5.3.0",
     "@tailwindcss/postcss": "^4.1.11",
     "material-symbols": "0.48.3",
     "postcss": "^8.5.6",

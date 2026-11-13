@@ -2,9 +2,6 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
 @import "material-symbols/outlined.css";
-@import "@fontsource/roboto/300.css";
-@import "@fontsource/roboto/400.css";
-@import "@fontsource/roboto/500.css";
 
 html,
 body {
@@ -13,7 +10,7 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font);
 }
 
 /* ───────────────────────────────────────────── */
@@ -26,22 +23,6 @@ body {
   background: transparent;
 }
 
-
-
-[ngMenu] [role='separator'] {
-  height: 1px;
-
-  margin: 4px 8px;
-
-  border: none;
-
-  background:
-    linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, .18),
-      transparent);
-}
-
 /* ───────────────────────────────────────────── */
 /* MATERIAL DIALOG — GLASS SURFACE              */
 /* ───────────────────────────────────────────── */
@@ -49,60 +30,20 @@ body {
 .mat-mdc-dialog-surface {
   --mat-dialog-container-color: transparent;
 
-  background:
-    radial-gradient(circle at 80% 15%,
-      var(--glass-pink),
-      transparent 45%),
-    radial-gradient(circle at 20% 85%,
-      var(--glass-blue),
-      transparent 50%),
-    linear-gradient(135deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0.02) 100%),
-    rgba(18, 20, 28, 0.45) !important;
-
-  backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
-
-  border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.32) !important;
-  border-left: 1.5px solid rgba(255, 255, 255, 0.28) !important;
-  border-radius: 28px !important;
-
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 20px 60px rgba(0, 0, 0, 0.35),
-    0 40px 100px rgba(0, 0, 0, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 0 40px rgba(255, 255, 255, 0.03) !important;
-
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter) !important;
+  backdrop-filter: var(--glass-filter) !important;
+  border: var(--glass-stroke) !important;
+  border-radius: var(--radius-dialog) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+  color: var(--text);
   overflow: hidden;
   isolation: isolate;
 }
 
-/* Subtle inner highlight for the dialog surface */
-.mat-mdc-dialog-surface::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 15% 5%,
-      rgba(255, 255, 255, 0.35),
-      transparent 25%),
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.12),
-      transparent 30%);
-  z-index: 0;
-}
-
-/* Dialog backdrop glass tint */
+/* Dialog backdrop tint */
 .cdk-overlay-dark-backdrop {
-  background: rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: var(--backdrop) !important;
 }
 
 /* Visible keyboard focus everywhere */
