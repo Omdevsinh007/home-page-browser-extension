@@ -10,8 +10,11 @@ A Chrome extension (Manifest V3) that replaces the new tab page with your own da
 - **Sorting.** Each section sorts manually, A–Z, by most recently opened, or by most used. Open counts are kept locally.
 - **Search.** Press `/` or `Ctrl+K` (`Cmd+K` on macOS) to search all links by name, site, section or group, with typo tolerance. `Enter` opens the selected result and `Ctrl+Enter` opens it in a background tab. If nothing matches, all links are listed below the message.
 - **Backgrounds.** Upload up to 3 images or videos and adjust fit, brightness and blur. Files are stored locally in this browser (IndexedDB).
-- **Import, export and backups.** Export your links to a JSON file and import them again. Your current links are backed up before every import, and backups can be downloaded from the menu.
-- **Offline and private.** Fonts and icons are bundled with the extension. Site icons come from the browser's own favicon cache, so no request goes to a third party.
+- **Import, export and backups.** Export your links to a JSON file and import them again. Your current links are backed up before every import, and backups can be downloaded from Settings.
+- **Shortcut style.** Show shortcuts and groups as **Tiles** or as **Compact** pills (groups show how many links they hold). Switch in **Settings**. Right-click, the context-menu key or Shift+F10 opens an item's menu.
+- **Settings.** One button in the bottom-right corner holds the shortcut style, backgrounds, export, import and backups.
+- **Glass look.** Every surface uses one frosted-glass material over your wallpaper.
+- **Offline and private.** Icons are bundled with the extension and text uses your system font. Site icons come from the browser's own favicon cache, so no request goes to a third party. A background video pauses while the tab is hidden.
 
 ## Install from source
 
