@@ -12,7 +12,8 @@
   /* Search sits on a darker fill so its placeholder stays readable over bright wallpaper. */
   --glass-fill-search: rgba(30, 30, 36, 0.50);
   --glass-filter: blur(30px) saturate(180%);
-  --glass-stroke: 0.5px solid rgba(255, 255, 255, 0.18);
+  --glass-stroke-color: rgba(255, 255, 255, 0.18);
+  --glass-stroke: 0.5px solid var(--glass-stroke-color);
   --glass-stroke-focus: rgba(255, 255, 255, 0.45);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
@@ -20,9 +21,11 @@
   /* Text on glass */
   --text: #fff;
   --text-dim: rgba(255, 255, 255, 0.72);
+  --text-faint: rgba(255, 255, 255, 0.45);
   --text-on-glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   --danger: #ff6b6b;
   --danger-fill: rgba(255, 107, 107, 0.85);
+  --success: #4ade80;
 
   /* Page */
   --page-bg: #000;

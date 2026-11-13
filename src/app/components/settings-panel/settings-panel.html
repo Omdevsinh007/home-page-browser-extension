@@ -1,9 +1,10 @@
 <div class="panel glass glass-dark" role="dialog" aria-label="Settings" cdkTrapFocus cdkTrapFocusAutoCapture>
   <h2 id="settings-style-label" class="label">Shortcut style</h2>
   <div class="segmented" role="radiogroup" aria-labelledby="settings-style-label">
-    @for (option of styles; track option.value) {
-      <button type="button" role="radio" [attr.aria-checked]="prefs.shortcutStyle() === option.value"
-        (click)="prefs.setShortcutStyle(option.value)">{{ option.label }}</button>
+    @for (option of styles; track option.value; let i = $index) {
+      <button #styleButton type="button" role="radio" [attr.aria-checked]="prefs.shortcutStyle() === option.value"
+        [tabIndex]="prefs.shortcutStyle() === option.value ? 0 : -1"
+        (click)="prefs.setShortcutStyle(option.value)" (keydown)="onStyleKeydown($event, i)">{{ option.label }}</button>
     }
   </div>
 

@@ -85,6 +85,25 @@ html:root {
   --mat-form-field-outlined-input-text-color: var(--text);
   --mat-form-field-outlined-caret-color: var(--text);
   --mat-form-field-outlined-container-shape: var(--radius-row);
+
+  /* Same type scale as the rest of the app */
+  --mat-form-field-container-text-font: var(--font);
+  --mat-form-field-container-text-size: var(--text-sm);
+  --mat-form-field-outlined-label-text-font: var(--font);
+  --mat-form-field-outlined-label-text-size: var(--text-sm);
+  --mat-form-field-subscript-text-font: var(--font);
+  --mat-form-field-subscript-text-size: var(--text-xs);
+  --mat-form-field-error-text-color: var(--danger);
+  --mat-form-field-outlined-error-outline-color: var(--danger);
+  --mat-form-field-outlined-error-focus-outline-color: var(--danger);
+  --mat-form-field-outlined-error-label-text-color: var(--danger);
+  --mat-button-filled-label-text-weight: 500;
+  --mat-button-text-label-text-weight: 500;
+  --mat-button-filled-horizontal-padding: 20px;
+
+  /* A disabled primary button stays visible, just quieter */
+  --mat-button-filled-disabled-container-color: var(--glass-fill-faint);
+  --mat-button-filled-disabled-label-text-color: var(--text-faint);
 }
 
 .mat-mdc-dialog-container .mat-mdc-unelevated-button.danger {

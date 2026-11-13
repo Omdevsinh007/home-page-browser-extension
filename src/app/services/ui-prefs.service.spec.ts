@@ -48,6 +48,31 @@ describe('UiPrefsService', () => {
     expect(fake.data[UI_PREFS_KEY]).toEqual({ shortcutStyle: 'compact' });
   });
 
+  it('falls back to tiles when reading fails', async () => {
+    const { fake, prefs } = setup({ [UI_PREFS_KEY]: { shortcutStyle: 'compact' } });
+    fake.getMany = async () => {
+      throw new Error('storage unavailable');
+    };
+    await expect(prefs.load()).resolves.toBeUndefined();
+    expect(prefs.shortcutStyle()).toBe('tiles');
+  });
+
+  it('keeps the latest choice when an earlier save fails late', async () => {
+    const { fake, notify, prefs } = setup();
+    await prefs.load();
+    let failFirst!: (e: Error) => void;
+    const original = fake.setMany.bind(fake);
+    let calls = 0;
+    fake.setMany = (values) => (++calls === 1 ? new Promise<void>((_, reject) => (failFirst = reject)) : original(values));
+    const first = prefs.setShortcutStyle('compact');
+    await prefs.setShortcutStyle('tiles');
+    await prefs.setShortcutStyle('compact');
+    failFirst(new Error('late failure'));
+    await first;
+    expect(prefs.shortcutStyle()).toBe('compact');
+    expect(notify.error).not.toHaveBeenCalled();
+  });
+
   it('reverts and reports when the write fails', async () => {
     const { fake, notify, prefs } = setup();
     await prefs.load();

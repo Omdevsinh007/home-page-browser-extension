@@ -20,7 +20,7 @@ function extensionFaviconBase(): string | null {
       <img [src]="s" alt="" [width]="displaySize()" [height]="displaySize()" loading="lazy" (error)="failed.set(true)" />
     } @else {
       <span
-        class="flex items-center justify-center rounded-full font-semibold text-white"
+        class="flex items-center justify-center rounded-full font-semibold text-[color:var(--text)]"
         [style.width.px]="displaySize()"
         [style.height.px]="displaySize()"
         [style.font-size.px]="displaySize() * 0.55"

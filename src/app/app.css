@@ -126,11 +126,9 @@
   border-radius: var(--radius-tile);
 }
 
-.custom-shortcut-placeholder.is-compact {
-  width: 120px;
-  height: 40px;
-  margin: 0;
-  border-radius: var(--radius-pill);
+/* Compact pills keep CDK's default placeholder (a copy of the pill), so the row keeps its real width. */
+.shortcuts-compact .cdk-drag-placeholder {
+  opacity: 0.35;
 }
 
 /* Corner controls */

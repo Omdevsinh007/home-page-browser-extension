@@ -19,19 +19,19 @@ import { LinkOpenerService } from '../../services/link-opener.service';
         target="_blank"
         rel="noopener noreferrer"
         (click)="open($event)"
-        class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-lg"
+        class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-sm text-[color:var(--text)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] rounded-[var(--radius-row)]"
       >
-        <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10">
+        <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-[color:var(--glass-fill)]">
           <app-favicon [url]="link().url" [name]="link().name" />
         </span>
         <span class="truncate" [title]="link().name">{{ link().name }}</span>
         @if (host()) {
-          <span class="ml-auto shrink-0 truncate pl-2 text-[11px] text-white/50 max-w-[40%]">{{ host() }}</span>
+          <span class="ml-auto shrink-0 truncate pl-2 text-xs text-[color:var(--text-dim)] max-w-[40%]">{{ host() }}</span>
         }
       </a>
       <button
         type="button"
-        class="mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-white/60 opacity-0 hover:bg-white/10 hover:text-white group-hover/row:opacity-100 focus-visible:opacity-100"
+        class="mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-[color:var(--text-dim)] opacity-0 hover:bg-[color:var(--glass-fill)] hover:text-[color:var(--text)] group-hover/row:opacity-100 focus-visible:opacity-100"
         [attr.aria-label]="'Options for ' + link().name"
         [matMenuTriggerFor]="menu"
       >

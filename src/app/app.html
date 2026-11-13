@@ -36,7 +36,9 @@
       [class.shortcuts-compact]="style === 'compact'" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
       @for (link of store.items(); track link.id) {
       <div class="shortcut-slot" cdkDrag>
-        <div class="custom-shortcut-placeholder" [class.is-compact]="style === 'compact'" *cdkDragPlaceholder></div>
+        @if (style === 'tiles') {
+        <div class="custom-shortcut-placeholder" *cdkDragPlaceholder></div>
+        }
         @if (link.type === "Shortcut") {
         <app-link [quickLink]="link" [variant]="style" (removeShortcut)="removeTile(link)" (editShortcut)="editShortcut(link)" />
         } @else {
