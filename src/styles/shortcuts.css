@@ -127,13 +127,29 @@
   background: var(--glass-fill-strong);
 }
 
-/* On pills the button sits at the end and only shows on hover or keyboard focus. */
-.shortcut.is-compact:hover .shortcut-pill,
-.shortcut.is-compact:focus-within .shortcut-pill {
-  padding-right: 38px;
+/*
+ * On pills the button fades in over the pill's right end on hover or keyboard focus.
+ * The pill never changes size (no reflow of the row): the count fades out under the
+ * button, and on link pills the end of the name fades instead.
+ */
+.shortcut-pill .shortcut-count,
+.shortcut-pill .shortcut-name {
+  transition: opacity 150ms ease;
+}
+
+.shortcut.is-compact:hover .shortcut-count,
+.shortcut.is-compact:focus-within .shortcut-count {
+  opacity: 0;
+}
+
+.shortcut.is-compact:hover .shortcut-pill > .shortcut-name:last-child,
+.shortcut.is-compact:focus-within .shortcut-pill > .shortcut-name:last-child {
+  -webkit-mask-image: linear-gradient(90deg, black calc(100% - 22px), transparent);
+  mask-image: linear-gradient(90deg, black calc(100% - 22px), transparent);
 }
 
 .shortcut.is-compact .shortcut-more {
+  transition: opacity 150ms ease, background var(--transition-smooth);
   top: 8px;
   right: 6px;
   opacity: 0;
