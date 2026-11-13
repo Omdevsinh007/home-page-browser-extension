@@ -33,14 +33,28 @@ export class DataTransferService {
       return false;
     }
     const plural = (n: number) => `${n} item${n === 1 ? '' : 's'}`;
-    const ok = await this.confirm.ask({
-      title: `Replace ${plural(this.store.items().length)} with ${plural(parsed.items.length)}?`,
-      message: 'Your current links are backed up first and can be downloaded from this menu.',
-      confirmText: 'Replace',
-      danger: true,
-      details: parsed.skipped.map((s) => `Skipped “${s.name}”: unsafe URL`),
-    });
-    if (!ok) return false;
+    const current = this.store.items().length;
+    const details = parsed.skipped.map((s) => `Skipped “${s.name}”: unsafe URL`);
+    // Nothing to replace and nothing skipped: import straight away instead of asking to "replace 0 items".
+    if (current > 0 || details.length) {
+      const ok = await this.confirm.ask(
+        current > 0
+          ? {
+              title: `Replace ${plural(current)} with ${plural(parsed.items.length)}?`,
+              message: 'Your current links are backed up first. You can download the backup from Settings.',
+              confirmText: 'Replace',
+              danger: true,
+              details,
+            }
+          : {
+              title: `Import ${plural(parsed.items.length)}?`,
+              message: 'Some entries in the file were left out.',
+              confirmText: 'Import',
+              details,
+            },
+      );
+      if (!ok) return false;
+    }
     try {
       await this.store.importReplace(parsed.items);
       if (parsed.stats) await this.stats.replace(parsed.stats);

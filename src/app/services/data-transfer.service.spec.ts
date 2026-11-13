@@ -39,6 +39,32 @@ describe('DataTransferService', () => {
     expect(store.items()).toHaveLength(9);
   });
 
+  it('says the backups are in Settings', async () => {
+    const { svc, ask } = await setup(true);
+    await svc.importText(JSON.stringify(v1RealShape));
+    expect(ask).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Your current links are backed up first. You can download the backup from Settings.' }),
+    );
+  });
+
+  it('imports without asking when there are no links yet', async () => {
+    const notify = { info: vi.fn(), error: vi.fn() };
+    const h = await storeHarness({ items: [], providers: [{ provide: NotifyService, useValue: notify }] });
+    const svc = TestBed.inject(DataTransferService);
+    expect(await svc.importText(JSON.stringify(v1RealShape))).toBe(true);
+    expect(h.ask).not.toHaveBeenCalled();
+    expect(h.store.items()).toHaveLength(9);
+    expect(notify.info).toHaveBeenCalledWith('Imported 9 items.');
+  });
+
+  it('still asks when the file has skipped items, even with no links yet', async () => {
+    const h = await storeHarness({ items: [] });
+    const svc = TestBed.inject(DataTransferService);
+    const bad = [...v1RealShape, { id: 'z', type: 'Shortcut', name: 'Evil', url: 'javascript:x', group: null, position: 99 }];
+    await svc.importText(JSON.stringify(bad));
+    expect(h.ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'Import 9 items?', details: ['Skipped “Evil”: unsafe URL'] }));
+  });
+
   it('changes nothing when the import is cancelled', async () => {
     const { svc, store } = await setup(false);
     expect(await svc.importText(JSON.stringify(v1RealShape))).toBe(false);
