@@ -1,5 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+@import "./styles/tokens.css";
+@import "material-symbols/outlined.css";
+@import "@fontsource/roboto/300.css";
+@import "@fontsource/roboto/400.css";
+@import "@fontsource/roboto/500.css";
 
 html,
 body {
@@ -9,44 +14,6 @@ body {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-:root {
-  --glass-radius: 26px;
-  --glass-radius-sm: 16px;
-
-  --glass-blur: 20px;
-  --glass-saturation: 180%;
-  --glass-brightness: 1.08;
-
-  --glass-bg: rgba(18, 20, 28, 0.05);
-
-  --glass-white-1: rgba(255, 255, 255, 0.30);
-  --glass-white-2: rgba(255, 255, 255, 0.18);
-  --glass-white-3: rgba(255, 255, 255, 0.08);
-  --glass-white-4: rgba(255, 255, 255, 0.03);
-
-  --glass-blue: rgba(120, 180, 255, 0.20);
-  --glass-pink: rgba(255, 140, 200, 0.20);
-
-  --glass-border: rgba(255, 255, 255, 0.18);
-
-  --glass-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 12px 40px rgba(0, 0, 0, .18),
-    0 30px 80px rgba(0, 0, 0, .22);
-
-  --glass-text: rgba(255, 255, 255, .96);
-
-  /* Section accent presets */
-  --accent-1: #60a5fa;
-  --accent-2: #34d399;
-  --accent-3: #fbbf24;
-  --accent-4: #f87171;
-  --accent-5: #a78bfa;
-  --accent-6: #f472b6;
-  --accent-7: #22d3ee;
-  --accent-8: #a3e635;
 }
 
 /* ───────────────────────────────────────────── */
@@ -136,4 +103,21 @@ body {
   background: rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

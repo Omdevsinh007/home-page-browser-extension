@@ -1,32 +1,3 @@
-:root {
-  --glass-radius: 22px;
-  --glass-radius-sm: 14px;
-
-  --glass-blur: 20px;
-  --glass-saturation: 180%;
-  --glass-brightness: 1.08;
-
-  --glass-bg: rgba(18, 20, 28, 0.06);
-
-  --glass-white-1: rgba(255, 255, 255, 0.30);
-  --glass-white-2: rgba(255, 255, 255, 0.18);
-  --glass-white-3: rgba(255, 255, 255, 0.08);
-  --glass-white-4: rgba(255, 255, 255, 0.03);
-
-  --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-border-strong: rgba(255, 255, 255, 0.28);
-
-  --glass-blue: rgba(120, 180, 255, 0.18);
-  --glass-pink: rgba(255, 140, 200, 0.18);
-
-  --glass-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 12px 40px rgba(0, 0, 0, .20),
-    0 30px 80px rgba(0, 0, 0, .22);
-
-  --glass-text: rgba(255, 255, 255, .96);
-}
-
 /* Layout Containers */
 .video {
   --controls: none;
@@ -51,57 +22,6 @@
   justify-content: center;
   align-items: center;
   z-index: 2;
-}
-
-.inner-wrap {
-  width: 100%;
-  padding: 0 20px;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* PRIMARY GLASS CONTAINER */
-.input-wrap {
-  /* Multi-layered gradient for depth */
-  background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0.02) 100%);
-
-  /* Premium Frost Effect */
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-
-  /* Enhanced Borders with iOS-style lighting */
-  border: 1px solid var(--glass-border);
-  border-top: 1.5px solid var(--glass-highlight);
-  border-left: 1.5px solid var(--glass-highlight);
-  border-radius: 28px;
-
-  /* Sophisticated Depth Layering */
-  box-shadow:
-    var(--glass-shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-
-  padding-block: 28px;
-  padding-inline: 24px;
-
-  /* Smooth transitions */
-  transition: all var(--transition-smooth);
-}
-
-.input-wrap:hover {
-  background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.03) 100%);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* INTERACTIVE GLASS CARD */
@@ -171,38 +91,6 @@
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.glass-panel {
-  background: rgba(10, 10, 10, 0.45);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border-light);
-  border-top: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-left: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: var(--glass-shadow-lg);
-}
-
-.video-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.video-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.video-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.video-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.main-video {
-  object-fit: cover;
 }
 
 ::ng-deep .mat-mdc-menu-content {
