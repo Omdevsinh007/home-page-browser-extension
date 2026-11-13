@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, DOCUMENT, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -47,6 +47,27 @@ export class App implements OnInit, OnDestroy {
 
   /** Background video does not autoplay when the user asks for reduced motion. */
   readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  private bgVideo = viewChild<ElementRef<HTMLVideoElement>>('bgVideo');
+  private resumeVideo = false;
+
+  constructor() {
+    // Pause the background video while the tab is hidden; resume only if it was playing.
+    const doc = inject(DOCUMENT);
+    const onVisibility = () => {
+      const video = this.bgVideo()?.nativeElement;
+      if (!video) return;
+      if (doc.visibilityState === 'hidden') {
+        this.resumeVideo = !video.paused;
+        if (this.resumeVideo) video.pause();
+      } else if (this.resumeVideo) {
+        this.resumeVideo = false;
+        if (!this.reducedMotion) video.play().catch(() => undefined);
+      }
+    };
+    doc.addEventListener('visibilitychange', onVisibility);
+    inject(DestroyRef).onDestroy(() => doc.removeEventListener('visibilitychange', onVisibility));
+  }
 
   readonly settingsOpen = signal(false);
   private settingsButton = viewChild.required<ElementRef<HTMLButtonElement>>('settingsButton');

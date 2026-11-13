@@ -1,7 +1,7 @@
 <div class="content-wrap">
   @if (bg.active(); as active) {
   @if (active.meta.type === 'video') {
-  <video [src]="active.objectUrl" [style.object-fit]="active.meta.objectFit"
+  <video #bgVideo [src]="active.objectUrl" [style.object-fit]="active.meta.objectFit"
     [style.filter]="'brightness(' + active.meta.brightness + '%) blur(' + active.meta.blur + 'px)'"
     [autoplay]="!reducedMotion" loop muted playsinline disablePictureInPicture class="video" aria-hidden="true">
   </video>

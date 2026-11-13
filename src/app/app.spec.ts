@@ -1,4 +1,6 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BackgroundStore } from './services/background.store';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { App } from './app';
@@ -44,6 +46,64 @@ async function settle(fixture: ComponentFixture<App>): Promise<HTMLElement> {
   fixture.detectChanges();
   return fixture.nativeElement as HTMLElement;
 }
+
+describe('App background video', () => {
+  let state: DocumentVisibilityState;
+
+  async function setupVideo(opts: { reducedMotion?: boolean } = {}) {
+    if (opts.reducedMotion) vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    state = 'visible';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+    const meta = { id: 'v', name: 'v.mp4', type: 'video', isActive: true, objectFit: 'cover', brightness: 100, blur: 0, order: 0 };
+    configure(await savedSample());
+    TestBed.overrideProvider(BackgroundStore, {
+      useValue: { active: signal({ meta, objectUrl: 'blob:v' }), list: signal([meta]), load: async () => undefined },
+    });
+    const fixture = TestBed.createComponent(App);
+    await settle(fixture);
+    const video = (fixture.nativeElement as HTMLElement).querySelector('video')!;
+    const play = vi.fn(async () => undefined);
+    const pause = vi.fn();
+    video.play = play;
+    video.pause = pause;
+    const setPaused = (paused: boolean) => Object.defineProperty(video, 'paused', { configurable: true, get: () => paused });
+    const setVisibility = (next: DocumentVisibilityState) => {
+      state = next;
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+    return { play, pause, setPaused, setVisibility };
+  }
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('pauses a playing video when the tab is hidden and resumes when shown', async () => {
+    const { play, pause, setPaused, setVisibility } = await setupVideo();
+    setPaused(false);
+    setVisibility('hidden');
+    expect(pause).toHaveBeenCalledTimes(1);
+    setPaused(true);
+    setVisibility('visible');
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not resume a video that was paused before hiding', async () => {
+    const { play, pause, setPaused, setVisibility } = await setupVideo();
+    setPaused(true);
+    setVisibility('hidden');
+    setVisibility('visible');
+    expect(pause).not.toHaveBeenCalled();
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it('does not resume under reduced motion', async () => {
+    const { play, setPaused, setVisibility } = await setupVideo({ reducedMotion: true });
+    setPaused(false);
+    setVisibility('hidden');
+    setPaused(true);
+    setVisibility('visible');
+    expect(play).not.toHaveBeenCalled();
+  });
+});
 
 describe('App', () => {
   it('renders the add tile', async () => {
