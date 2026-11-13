@@ -19,15 +19,15 @@ export interface NameDialogData {
   imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h2 mat-dialog-title class="!text-white">{{ data.title }}</h2>
+    <h2 mat-dialog-title>{{ data.title }}</h2>
     <form (ngSubmit)="submit()" class="px-6">
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label class="!text-white/70">{{ data.label }}</mat-label>
-        <input matInput class="!text-white" name="name" [ngModel]="name()" (ngModelChange)="name.set($event)" cdkFocusInitial />
+        <mat-label>{{ data.label }}</mat-label>
+        <input matInput name="name" [ngModel]="name()" (ngModelChange)="name.set($event)" cdkFocusInitial />
       </mat-form-field>
     </form>
     <mat-dialog-actions align="end">
-      <button class="!text-white" mat-button mat-dialog-close>Cancel</button>
+      <button mat-button mat-dialog-close>Cancel</button>
       <button mat-flat-button [disabled]="blank()" (click)="submit()">{{ data.confirmText }}</button>
     </mat-dialog-actions>
   `,

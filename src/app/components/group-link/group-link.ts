@@ -6,7 +6,6 @@ import { GroupTile } from '../../core/model';
 import { renumber } from '../../core/positions';
 import { ShortcutStyle } from '../../services/ui-prefs.service';
 import { Favicon } from '../favicon/favicon';
-import { isMenuKey } from '../link/menu-keys';
 
 /** A group on the main page, as a tile with a favicon preview or a compact pill with a link count. */
 @Component({
@@ -33,13 +32,9 @@ export class GroupLink {
 
   readonly linkCount = computed(() => this.quickLink().sections.reduce((n, s) => n + s.links.length, 0));
 
-  /** Right-click shows the app menu instead of the browser one. */
+  /** Right-click, the Menu key and Shift+F10 all arrive here as contextmenu: show the app menu, not the browser one. */
   openMenu(event: Event): void {
     event.preventDefault();
     this.menu().openMenu();
-  }
-
-  onKeydown(event: KeyboardEvent): void {
-    if (isMenuKey(event)) this.openMenu(event);
   }
 }

@@ -25,18 +25,18 @@ const safeUrl = (c: AbstractControl): ValidationErrors | null => (isUnsafeUrl(c.
   imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h2 mat-dialog-title class="!text-white">{{ data.title }}</h2>
+    <h2 mat-dialog-title>{{ data.title }}</h2>
     <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4 px-6 pt-2">
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label class="!text-white/70">Name</mat-label>
-        <input matInput class="!text-white" formControlName="name" cdkFocusInitial />
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" cdkFocusInitial />
         @if (form.controls.name.invalid) {
           <mat-error>This field is required</mat-error>
         }
       </mat-form-field>
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label class="!text-white/70">URL</mat-label>
-        <input matInput class="!text-white" formControlName="url" />
+        <mat-label>URL</mat-label>
+        <input matInput formControlName="url" />
         @if (form.controls.url.hasError('unsafe')) {
           <mat-error>This URL type is not allowed</mat-error>
         } @else if (form.controls.url.invalid) {
@@ -46,7 +46,7 @@ const safeUrl = (c: AbstractControl): ValidationErrors | null => (isUnsafeUrl(c.
       <button type="submit" hidden></button>
     </form>
     <mat-dialog-actions align="end">
-      <button class="!text-white" mat-button mat-dialog-close>Cancel</button>
+      <button mat-button mat-dialog-close>Cancel</button>
       <button mat-flat-button (click)="submit()">Save</button>
     </mat-dialog-actions>
   `,

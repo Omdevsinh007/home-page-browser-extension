@@ -55,7 +55,7 @@ describe('GroupLink', () => {
   it('group menu says Rename and Delete', () => {
     const el = create('tiles');
     el.querySelector('button[aria-label="Open group Propera"]')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ContextMenu', bubbles: true, cancelable: true }),
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
     );
     fixture.detectChanges();
     const items = [...overlay.querySelectorAll('[mat-menu-item]')].map((b) => b.textContent!.trim());

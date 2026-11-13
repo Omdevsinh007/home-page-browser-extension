@@ -1,14 +1,14 @@
 <div class="shortcut select-none" [class.is-compact]="variant() === 'compact'">
   @if (variant() === 'compact') {
     <button type="button" data-testid="pill" class="shortcut-pill glass glass-strong on-glass" [title]="quickLink().name"
-      [attr.aria-label]="'Open group ' + quickLink().name" (click)="open.emit()" (contextmenu)="openMenu($event)" (keydown)="onKeydown($event)">
+      [attr.aria-label]="'Open group ' + quickLink().name" (click)="open.emit()" (contextmenu)="openMenu($event)">
       <span class="shortcut-icon"><app-favicon [url]="preview()[0]?.url ?? ''" [name]="quickLink().name" [displaySize]="16" /></span>
       <span class="shortcut-name">{{ quickLink().name }}</span>
       <span class="shortcut-count" aria-hidden="true">{{ linkCount() }}</span>
     </button>
   } @else {
     <button type="button" matRipple class="shortcut-tile glass on-glass" [attr.aria-label]="'Open group ' + quickLink().name"
-      (click)="open.emit()" (contextmenu)="openMenu($event)" (keydown)="onKeydown($event)">
+      (click)="open.emit()" (contextmenu)="openMenu($event)">
       <span class="shortcut-quad">
         @for (link of preview(); track link.id) {
           <span class="shortcut-icon"><app-favicon [url]="link.url" [name]="link.name" [displaySize]="16" /></span>
@@ -24,6 +24,8 @@
 </div>
 
 <mat-menu #groupMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="rename.emit()">Rename</button>
-  <button mat-menu-item class="danger" (click)="removeLink.emit()">Delete</button>
+  <div (contextmenu)="$event.preventDefault()">
+    <button mat-menu-item (click)="rename.emit()">Rename</button>
+    <button mat-menu-item class="danger" (click)="removeLink.emit()">Delete</button>
+  </div>
 </mat-menu>

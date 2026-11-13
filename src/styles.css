@@ -41,6 +41,56 @@ body {
   isolation: isolate;
 }
 
+/* Material text uses the system font (the prebuilt theme names only Roboto, which is not bundled). */
+html:root {
+  --mat-sys-body-large-font: var(--font);
+  --mat-sys-body-medium-font: var(--font);
+  --mat-sys-body-small-font: var(--font);
+  --mat-sys-display-large-font: var(--font);
+  --mat-sys-display-medium-font: var(--font);
+  --mat-sys-display-small-font: var(--font);
+  --mat-sys-headline-large-font: var(--font);
+  --mat-sys-headline-medium-font: var(--font);
+  --mat-sys-headline-small-font: var(--font);
+  --mat-sys-label-large-font: var(--font);
+  --mat-sys-label-medium-font: var(--font);
+  --mat-sys-label-small-font: var(--font);
+  --mat-sys-title-large-font: var(--font);
+  --mat-sys-title-medium-font: var(--font);
+  --mat-sys-title-small-font: var(--font);
+}
+
+/* Dialog text, buttons and fields on glass */
+.mat-mdc-dialog-container {
+  --mat-dialog-subhead-color: var(--text);
+  --mat-dialog-subhead-font: var(--font);
+  --mat-dialog-subhead-size: var(--text-lg);
+  --mat-dialog-subhead-weight: 600;
+  --mat-dialog-supporting-text-color: var(--text-dim);
+  --mat-dialog-supporting-text-font: var(--font);
+
+  --mat-button-filled-container-color: var(--glass-fill-strong);
+  --mat-button-filled-label-text-color: var(--text);
+  --mat-button-filled-container-shape: var(--radius-pill);
+  --mat-button-text-label-text-color: var(--text-dim);
+  --mat-button-text-container-shape: var(--radius-pill);
+
+  --mat-form-field-outlined-outline-width: 1px;
+  --mat-form-field-outlined-focus-outline-width: 1px;
+  --mat-form-field-outlined-outline-color: var(--glass-fill-strong);
+  --mat-form-field-outlined-hover-outline-color: var(--glass-stroke-focus);
+  --mat-form-field-outlined-focus-outline-color: var(--glass-stroke-focus);
+  --mat-form-field-outlined-label-text-color: var(--text-dim);
+  --mat-form-field-outlined-focus-label-text-color: var(--text);
+  --mat-form-field-outlined-input-text-color: var(--text);
+  --mat-form-field-outlined-caret-color: var(--text);
+  --mat-form-field-outlined-container-shape: var(--radius-row);
+}
+
+.mat-mdc-dialog-container .mat-mdc-unelevated-button.danger {
+  --mat-button-filled-container-color: var(--danger-fill);
+}
+
 /* Material menus in the glass material */
 .mat-mdc-menu-panel.glass-menu {
   background: var(--glass-fill-dark) !important;

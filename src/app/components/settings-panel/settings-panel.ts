@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { MatIcon } from '@angular/material/icon';
 import { DataTransferService } from '../../services/data-transfer.service';
 import { ShortcutStyle, UiPrefsService } from '../../services/ui-prefs.service';
@@ -6,7 +7,7 @@ import { ShortcutStyle, UiPrefsService } from '../../services/ui-prefs.service';
 /** The one Settings popover: shortcut style, backgrounds and data actions. */
 @Component({
   selector: 'app-settings-panel',
-  imports: [MatIcon],
+  imports: [MatIcon, CdkTrapFocus],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.css',
@@ -17,6 +18,8 @@ export class SettingsPanel {
 
   readonly backgrounds = output<void>();
   readonly importFile = output<void>();
+  /** Emitted after a data action, so the host can close the popover. */
+  readonly done = output<void>();
 
   readonly styles: { value: ShortcutStyle; label: string }[] = [
     { value: 'tiles', label: 'Tiles' },

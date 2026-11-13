@@ -1,13 +1,13 @@
 <div class="shortcut" [class.is-compact]="variant() === 'compact'">
   @if (variant() === 'compact') {
     <a data-testid="pill" class="shortcut-pill glass on-glass" [href]="quickLink().url" [title]="quickLink().name"
-      target="_blank" rel="noopener noreferrer" (click)="open($event)" (contextmenu)="openMenu($event)" (keydown)="onKeydown($event)">
+      target="_blank" rel="noopener noreferrer" (click)="open($event)" (contextmenu)="openMenu($event)">
       <span class="shortcut-icon"><app-favicon [url]="quickLink().url" [name]="quickLink().name" [displaySize]="16" /></span>
       <span class="shortcut-name">{{ quickLink().name }}</span>
     </a>
   } @else {
     <a matRipple class="shortcut-tile glass on-glass" [href]="quickLink().url" target="_blank" rel="noopener noreferrer"
-      (click)="open($event)" (contextmenu)="openMenu($event)" (keydown)="onKeydown($event)">
+      (click)="open($event)" (contextmenu)="openMenu($event)">
       <span class="shortcut-icon"><app-favicon [url]="quickLink().url" [name]="quickLink().name" [displaySize]="20" /></span>
       <p class="shortcut-name" [title]="quickLink().name">{{ quickLink().name }}</p>
     </a>
@@ -19,6 +19,8 @@
 </div>
 
 <mat-menu #linkMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="editShortcut.emit()">Edit shortcut</button>
-  <button mat-menu-item class="danger" (click)="removeShortcut.emit()">Delete</button>
+  <div (contextmenu)="$event.preventDefault()">
+    <button mat-menu-item (click)="editShortcut.emit()">Edit shortcut</button>
+    <button mat-menu-item class="danger" (click)="removeShortcut.emit()">Delete</button>
+  </div>
 </mat-menu>

@@ -16,8 +16,8 @@ export interface ConfirmData {
   imports: [MatDialogModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h2 mat-dialog-title class="!text-white">{{ data.title }}</h2>
-    <mat-dialog-content class="!text-white/80">
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <mat-dialog-content>
       <p>{{ data.message }}</p>
       @if (data.details?.length) {
         <ul class="mt-2 list-disc pl-5 text-sm">
@@ -28,8 +28,8 @@ export interface ConfirmData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button class="!text-white" [mat-dialog-close]="false">Cancel</button>
-      <button mat-flat-button [class.!bg-red-500]="data.danger" [mat-dialog-close]="true" cdkFocusInitial>
+      <button mat-button [mat-dialog-close]="false">Cancel</button>
+      <button mat-flat-button [class.danger]="data.danger" [mat-dialog-close]="true" cdkFocusInitial>
         {{ data.confirmText }}
       </button>
     </mat-dialog-actions>

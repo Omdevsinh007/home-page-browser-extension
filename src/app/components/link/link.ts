@@ -6,7 +6,6 @@ import { ShortcutTile } from '../../core/model';
 import { LinkOpenerService } from '../../services/link-opener.service';
 import { ShortcutStyle } from '../../services/ui-prefs.service';
 import { Favicon } from '../favicon/favicon';
-import { isMenuKey } from './menu-keys';
 
 /** A shortcut on the main page, as a tile or a compact pill. */
 @Component({
@@ -30,13 +29,9 @@ export class Link {
     void this.opener.open(this.quickLink());
   }
 
-  /** Right-click shows the app menu instead of the browser one. */
+  /** Right-click, the Menu key and Shift+F10 all arrive here as contextmenu: show the app menu, not the browser one. */
   openMenu(event: Event): void {
     event.preventDefault();
     this.menu().openMenu();
-  }
-
-  onKeydown(event: KeyboardEvent): void {
-    if (isMenuKey(event)) this.openMenu(event);
   }
 }

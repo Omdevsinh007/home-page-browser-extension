@@ -60,6 +60,21 @@ describe('SettingsPanel', () => {
     expect(importFile).toHaveBeenCalledTimes(1);
   });
 
+  it('emits done after each data action so the popover closes', () => {
+    const { fixture, button } = setup();
+    const done = vi.fn();
+    fixture.componentInstance.done.subscribe(done);
+    button('Export data').click();
+    button('Export for older version (2.x)').click();
+    button('Download backups').click();
+    expect(done).toHaveBeenCalledTimes(3);
+  });
+
+  it('traps focus inside the panel', () => {
+    const { el } = setup();
+    expect(el.querySelector('[role="dialog"]')!.hasAttribute('cdktrapfocus')).toBe(true);
+  });
+
   it('calls the data service', () => {
     const { button, data } = setup();
     button('Export data').click();

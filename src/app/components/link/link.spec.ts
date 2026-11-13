@@ -47,11 +47,24 @@ describe('Link', () => {
     expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
   });
 
-  it('Shift+F10 opens the menu', () => {
+  it('keyboard menu keys are left to the contextmenu event', () => {
+    // Browsers turn the Menu key and Shift+F10 into a contextmenu event on the focused element.
+    // Opening on keydown as well would move focus into the menu, and the later native
+    // contextmenu would then land on a menu item and show the browser menu.
     const el = create('tiles');
     el.querySelector('a')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true, bubbles: true, cancelable: true }));
     fixture.detectChanges();
-    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
+    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeNull();
+  });
+
+  it('contextmenu inside the open menu is blocked too', () => {
+    const el = create('tiles');
+    el.querySelector('a')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    const item = overlay.querySelector('[mat-menu-item]')!;
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    item.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
   });
 
   it('link menu says Edit shortcut and Delete', () => {

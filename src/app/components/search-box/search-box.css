@@ -13,7 +13,7 @@
 }
 
 .search-field:focus-within {
-  background: var(--glass-fill-dark);
+  border-color: var(--glass-stroke-focus);
 }
 
 .search-field input {

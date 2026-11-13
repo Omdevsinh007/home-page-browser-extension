@@ -44,7 +44,7 @@
 }
 
 .shortcut-add {
-  border-style: dashed;
+  background: var(--glass-fill-faint);
 }
 
 /* Status banners and empty state */
@@ -121,8 +121,8 @@
   width: 112px;
   height: 140px;
   margin: 14px 16px;
-  background: var(--glass-fill);
-  border: 1px dashed var(--text-dim);
+  background: var(--glass-fill-faint);
+  border: var(--glass-stroke);
   border-radius: var(--radius-tile);
 }
 

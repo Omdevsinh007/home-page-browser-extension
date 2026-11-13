@@ -69,7 +69,7 @@
   [cdkConnectedOverlayPositions]="settingsPositions" cdkConnectedOverlayHasBackdrop
   cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop" (backdropClick)="closeSettings()"
   (detach)="closeSettings()" (overlayKeydown)="onSettingsKeydown($event)">
-  <app-settings-panel (backgrounds)="closeSettings(); openBackgrounds()" (importFile)="closeSettings(); fileInput.click()" />
+  <app-settings-panel (backgrounds)="closeSettings(); openBackgrounds()" (importFile)="closeSettings(); fileInput.click()" (done)="closeSettings()" />
 </ng-template>
 
 <mat-menu #addMenu="matMenu" class="glass-menu">
