@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { Favicon } from '../favicon/favicon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatRippleModule } from '@angular/material/core';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { GroupTile } from '../../core/model';
 import { renumber } from '../../core/positions';
 
 @Component({
   selector: 'app-group-link',
-  imports: [Favicon, MatButtonModule, MatMenuModule, OverlayModule],
+  imports: [Favicon, MatButtonModule, MatMenuModule, MatRippleModule, OverlayModule],
   templateUrl: './group-link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './group-link.css',

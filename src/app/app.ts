@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -6,6 +6,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatRippleModule } from '@angular/material/core';
 import { firstValueFrom } from 'rxjs';
 import { BackgroundStore } from './services/background.store';
 import { BackgroundDialog } from './components/background-dialog/background-dialog';
@@ -27,11 +28,10 @@ const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, GroupLink, DragDropModule, OverlayModule],
+  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, MatRippleModule, GroupLink, DragDropModule, OverlayModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class App implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
@@ -41,6 +41,9 @@ export class App implements OnInit, OnDestroy {
   readonly data = inject(DataTransferService);
   readonly store = inject(LinksStore);
   readonly bg = inject(BackgroundStore);
+
+  /** Background video does not autoplay when the user asks for reduced motion. */
+  readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;

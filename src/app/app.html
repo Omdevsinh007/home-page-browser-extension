@@ -3,7 +3,7 @@
   @if (active.meta.type === 'video') {
   <video [src]="active.objectUrl" [style.object-fit]="active.meta.objectFit"
     [style.filter]="'brightness(' + active.meta.brightness + '%) blur(' + active.meta.blur + 'px)'"
-    autoplay loop muted playsinline disablePictureInPicture class="video" aria-hidden="true">
+    [autoplay]="!reducedMotion" loop muted playsinline disablePictureInPicture class="video" aria-hidden="true">
   </video>
   } @else {
   <img [src]="active.objectUrl" [style.object-fit]="active.meta.objectFit"
@@ -14,11 +14,22 @@
   <div class="container w-full z-10 px-4">
     @switch (store.status()) {
     @case ('readonly-future') { <p role="status" class="mb-4 rounded-lg bg-amber-500/80 px-4 py-2 text-center text-white">Your links were saved by a newer version. Editing is disabled.</p> }
-    @case ('corrupt') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Saved links could not be read. Nothing was overwritten.</p> }
+    @case ('corrupt') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Saved links could not be read. Nothing was overwritten. <button type="button" class="ml-2 underline" (click)="data.exportRaw()">Export raw data</button></p> }
     @case ('write-failed') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Could not save your links. Changes may be lost.</p> }
     }
     <app-search-box class="relative z-30 mb-6" />
-    <div class="grid grid-cols-[repeat(auto-fill,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
+    @if (store.status() === 'ready' && store.items().length === 0) {
+    <section class="mx-auto max-w-md rounded-2xl bg-black/40 p-8 text-center text-white backdrop-blur-md" aria-labelledby="empty-title">
+      <h1 id="empty-title" class="text-xl font-medium">Your new tab is empty</h1>
+      <p class="mt-2 text-sm text-white/70">Add your first shortcut or group, or import an export file.</p>
+      <div class="mt-5 flex flex-wrap justify-center gap-2">
+        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="addShortcut()">Add shortcut</button>
+        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="addGroup()">Add group</button>
+        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="fileInput.click()">Import data</button>
+      </div>
+    </section>
+    } @else {
+    <div class="grid grid-cols-[repeat(auto-fit,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
       (cdkDropListDropped)="drop($event)">
       @for (link of store.items(); track link.id) {
       <div class="!p-4" cdkDrag>
@@ -44,6 +55,7 @@
         </div>
       </div>
     </div>
+    }
   </div>
 
   <!-- Data Management Floating Button (Invisible until hover) -->

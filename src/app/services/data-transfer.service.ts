@@ -62,6 +62,11 @@ export class DataTransferService {
     for (const [key, value] of entries) this.download(`${key}.json`, value);
   }
 
+  /** Saves the unreadable stored value as-is, so nothing is lost when the store is corrupt. */
+  async exportRaw(): Promise<void> {
+    this.download('custom-homepage-raw.json', await this.store.rawForExport());
+  }
+
   download(filename: string, data: unknown): void {
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
