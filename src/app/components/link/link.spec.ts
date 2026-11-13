@@ -1,18 +1,64 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { provideAppIcons } from '../../core/icons';
+import { ShortcutTile } from '../../core/model';
+import { LinkOpenerService } from '../../services/link-opener.service';
 import { Link } from './link';
+
+const tile = (name = 'Gmail'): ShortcutTile => ({ id: 's1', type: 'Shortcut', name, url: 'https://mail.google.com', position: 0 });
 
 describe('Link', () => {
   let fixture: ComponentFixture<Link>;
+  let overlay: HTMLElement;
+
+  function create(variant: 'tiles' | 'compact', name?: string) {
+    fixture = TestBed.createComponent(Link);
+    fixture.componentRef.setInput('quickLink', tile(name));
+    fixture.componentRef.setInput('variant', variant);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Link] }).compileComponents();
-    fixture = TestBed.createComponent(Link);
-    fixture.componentRef.setInput('quickLink', { id: 's1', type: 'Shortcut', name: 'Gmail', url: 'https://mail.google.com', position: 0 });
-    fixture.detectChanges();
+    await TestBed.configureTestingModule({
+      imports: [Link],
+      providers: [provideAppIcons(), { provide: LinkOpenerService, useValue: { open: vi.fn() } }],
+    }).compileComponents();
+    overlay = TestBed.inject(OverlayContainer).getContainerElement();
   });
 
   it('renders the tile name', () => {
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Gmail');
+    expect(create('tiles').textContent).toContain('Gmail');
+  });
+
+  it('compact link shows a pill with name and title', () => {
+    const name = 'A very long shortcut name that will not fit';
+    const pill = create('compact', name).querySelector('[data-testid="pill"]') as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.getAttribute('title')).toBe(name);
+  });
+
+  it('right-click opens the menu and blocks the browser menu', () => {
+    const el = create('compact');
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    el.querySelector('[data-testid="pill"]')!.dispatchEvent(event);
+    fixture.detectChanges();
+    expect(event.defaultPrevented).toBe(true);
+    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
+  });
+
+  it('Shift+F10 opens the menu', () => {
+    const el = create('tiles');
+    el.querySelector('a')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true, bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
+  });
+
+  it('link menu says Edit shortcut and Delete', () => {
+    const el = create('tiles');
+    el.querySelector('a')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    const items = [...overlay.querySelectorAll('[mat-menu-item]')].map((b) => b.textContent!.trim());
+    expect(items).toEqual(['Edit shortcut', 'Delete']);
   });
 });

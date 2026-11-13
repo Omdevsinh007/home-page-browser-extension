@@ -40,7 +40,7 @@ import { LinkOpenerService } from '../../services/link-opener.service';
     </div>
     <mat-menu #menu="matMenu" class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !shadow-2xl">
       <button mat-menu-item class="!text-white" (click)="edit.emit()">Edit link</button>
-      <button mat-menu-item class="!text-red-400" (click)="remove.emit()">Remove</button>
+      <button mat-menu-item class="!text-red-400" (click)="remove.emit()">Delete</button>
     </mat-menu>
   `,
 })

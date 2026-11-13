@@ -1,21 +1,25 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { Favicon } from '../favicon/favicon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
 import { MatRippleModule } from '@angular/material/core';
-import { OverlayModule } from '@angular/cdk/overlay';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { GroupTile } from '../../core/model';
 import { renumber } from '../../core/positions';
+import { ShortcutStyle } from '../../services/ui-prefs.service';
+import { Favicon } from '../favicon/favicon';
+import { isMenuKey } from '../link/menu-keys';
 
+/** A group on the main page, as a tile with a favicon preview or a compact pill with a link count. */
 @Component({
   selector: 'app-group-link',
-  imports: [Favicon, MatButtonModule, MatMenuModule, MatRippleModule, OverlayModule],
+  imports: [Favicon, MatIcon, MatMenuModule, MatRippleModule],
   templateUrl: './group-link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './group-link.css',
 })
 export class GroupLink {
+  private menu = viewChild.required(MatMenuTrigger);
+
   quickLink = input.required<GroupTile>();
+  variant = input<ShortcutStyle>('tiles');
   open = output<void>();
   rename = output<void>();
   removeLink = output<void>();
@@ -26,4 +30,16 @@ export class GroupLink {
       .flatMap((s) => renumber(s.links))
       .slice(0, 4),
   );
+
+  readonly linkCount = computed(() => this.quickLink().sections.reduce((n, s) => n + s.links.length, 0));
+
+  /** Right-click shows the app menu instead of the browser one. */
+  openMenu(event: Event): void {
+    event.preventDefault();
+    this.menu().openMenu();
+  }
+
+  onKeydown(event: KeyboardEvent): void {
+    if (isMenuKey(event)) this.openMenu(event);
+  }
 }
