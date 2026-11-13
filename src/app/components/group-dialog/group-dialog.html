@@ -32,13 +32,13 @@
       <h2 class="hidden truncate text-xl font-medium text-white md:block" id="group-dialog-title">{{ group()?.name }}</h2>
       <span class="ml-auto flex items-center gap-1">
         <button type="button" class="dialog-icon-btn" aria-label="Add section" (click)="addSection()">
-          <mat-icon>playlist_add</mat-icon>
+          <mat-icon svgIcon="playlist_add" />
         </button>
         <button type="button" class="dialog-icon-btn" aria-label="Group options" [matMenuTriggerFor]="groupMenu">
-          <mat-icon>more_vert</mat-icon>
+          <mat-icon svgIcon="more_vert" />
         </button>
         <button type="button" class="dialog-icon-btn" aria-label="Close" (click)="close()">
-          <mat-icon>close</mat-icon>
+          <mat-icon svgIcon="close" />
         </button>
       </span>
     </header>
@@ -56,7 +56,7 @@
               <app-section-column cdkDrag [cdkDragData]="section.id" [group]="g" [section]="section" />
             }
             <button type="button" class="add-section" (click)="addSection()">
-              <mat-icon>add</mat-icon>
+              <mat-icon svgIcon="add" />
               <span>Add section</span>
             </button>
           </div>
