@@ -13,46 +13,43 @@
 
   <div class="container w-full z-10 px-4">
     @switch (store.status()) {
-    @case ('readonly-future') { <p role="status" class="mb-4 rounded-lg bg-amber-500/80 px-4 py-2 text-center text-white">Your links were saved by a newer version. Editing is disabled.</p> }
-    @case ('corrupt') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Saved links could not be read. Nothing was overwritten. <button type="button" class="ml-2 underline" (click)="data.exportRaw()">Export raw data</button></p> }
-    @case ('write-failed') { <p role="alert" class="mb-4 rounded-lg bg-red-600/80 px-4 py-2 text-center text-white">Could not save your links. Changes may be lost.</p> }
+    @case ('readonly-future') { <p role="status" class="banner glass glass-dark on-glass">Your links were saved by a newer version. Editing is disabled.</p> }
+    @case ('corrupt') { <p role="alert" class="banner banner-danger glass glass-dark on-glass">Saved links could not be read. Nothing was overwritten. <button type="button" class="banner-action" (click)="data.exportRaw()">Export raw data</button></p> }
+    @case ('write-failed') { <p role="alert" class="banner banner-danger glass glass-dark on-glass">Could not save your links. Changes may be lost.</p> }
     }
-    <app-search-box class="relative z-30 mb-6" />
-    @if (store.status() === 'ready' && store.items().length === 0) {
-    <section class="mx-auto max-w-md rounded-2xl bg-black/40 p-8 text-center text-white backdrop-blur-md" aria-labelledby="empty-title">
-      <h1 id="empty-title" class="text-xl font-medium">Your new tab is empty</h1>
-      <p class="mt-2 text-sm text-white/70">Add your first shortcut or group, or import an export file.</p>
-      <div class="mt-5 flex flex-wrap justify-center gap-2">
-        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="addShortcut()">Add shortcut</button>
-        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="addGroup()">Add group</button>
-        <button type="button" class="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" (click)="fileInput.click()">Import data</button>
+    <app-search-box class="relative z-30 mb-8 block" />
+    @if (store.status() === 'loading') {
+    <!-- Loading: search only, so the page never flashes a lone add tile. -->
+    } @else if (store.status() === 'ready' && store.items().length === 0) {
+    <section class="empty glass glass-dark on-glass" aria-labelledby="empty-title">
+      <h1 id="empty-title" class="empty-title">Your new tab is empty</h1>
+      <p class="empty-text">Add your first shortcut or group, or import an export file.</p>
+      <div class="empty-actions">
+        <button type="button" class="pill-button glass" (click)="addShortcut()">Add shortcut</button>
+        <button type="button" class="pill-button glass" (click)="addGroup()">Add group</button>
+        <button type="button" class="pill-button glass" (click)="fileInput.click()">Import data</button>
       </div>
     </section>
     } @else {
-    <div class="grid grid-cols-[repeat(auto-fit,144px)] justify-center" cdkDropListOrientation="mixed" cdkDropList
-      (cdkDropListDropped)="drop($event)">
+    @let style = uiPrefs.shortcutStyle();
+    <div data-testid="shortcuts" [attr.data-style]="style" class="shortcuts" [class.shortcuts-tiles]="style === 'tiles'"
+      [class.shortcuts-compact]="style === 'compact'" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
       @for (link of store.items(); track link.id) {
-      <div class="!p-4" cdkDrag>
-        <div class="custom-shortcut-placeholder rounded-md m-4" *cdkDragPlaceholder>
-          <div class="w-28 rounded-md">
-          </div>
-        </div>
+      <div class="shortcut-slot" cdkDrag>
+        <div class="custom-shortcut-placeholder" [class.is-compact]="style === 'compact'" *cdkDragPlaceholder></div>
         @if (link.type === "Shortcut") {
-        <app-link [quickLink]="link" (removeShortcut)="removeTile(link)" (editShortcut)="editShortcut(link)" />
+        <app-link [quickLink]="link" [variant]="style" (removeShortcut)="removeTile(link)" (editShortcut)="editShortcut(link)" />
         } @else {
-        <app-group-link [quickLink]="link" (open)="openGroup(link)" (rename)="renameGroup(link)" (removeLink)="removeTile(link)" />
+        <app-group-link [quickLink]="link" [variant]="style" (open)="openGroup(link)" (rename)="renameGroup(link)" (removeLink)="removeTile(link)" />
         }
       </div>
       }
-      <div class="flex justify-center py-4">
-        <div
-          class="add-links flex justify-center items-center group hover:backdrop-blur-lg hover:bg-white/5 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95">
-          <button type="button" aria-label="Add shortcut or group"
-            class="w-10 h-10 text-center flex justify-center items-center rounded-full backdrop-blur-md bg-white/10 group-hover:backdrop-blur-3xl group-hover:bg-white/20 transition-all duration-300 shadow-sm"
-            [matMenuTriggerFor]="addMenu">
-            <mat-icon class="!text-white" svgIcon="add" />
-          </button>
-        </div>
+      <div class="shortcut-slot">
+        <button type="button" aria-label="Add shortcut or group" [matMenuTriggerFor]="addMenu"
+          class="glass on-glass shortcut-add" [class.shortcut-tile]="style === 'tiles'" [class.shortcut-pill]="style === 'compact'">
+          <span class="shortcut-icon"><mat-icon svgIcon="add" aria-hidden="true" /></span>
+          <span class="shortcut-name">Add</span>
+        </button>
       </div>
     </div>
     }
@@ -75,12 +72,9 @@
   <app-settings-panel (backgrounds)="closeSettings(); openBackgrounds()" (importFile)="closeSettings(); fileInput.click()" />
 </ng-template>
 
-<mat-menu #addMenu="matMenu"
-  class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
-  <button mat-menu-item (click)="addShortcut()"
-    class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg !mb-0">Add shortcut</button>
-  <button mat-menu-item (click)="addGroup()" class="!text-white hover:!bg-white/10 !transition-colors !rounded-lg">Add
-    group</button>
+<mat-menu #addMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="addShortcut()">Add shortcut</button>
+  <button mat-menu-item (click)="addGroup()">Add group</button>
 </mat-menu>
 
 <input type="file" #fileInput accept=".json" class="hidden" (change)="onImportData($event)">

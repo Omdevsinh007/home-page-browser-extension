@@ -24,6 +24,7 @@ import { LinkStatsService } from './services/link-stats.service';
 import { ConfirmService } from './services/confirm.service';
 import { NotifyService } from './services/notify.service';
 import { DataTransferService } from './services/data-transfer.service';
+import { UiPrefsService } from './services/ui-prefs.service';
 
 const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
@@ -42,6 +43,7 @@ export class App implements OnInit, OnDestroy {
   readonly data = inject(DataTransferService);
   readonly store = inject(LinksStore);
   readonly bg = inject(BackgroundStore);
+  readonly uiPrefs = inject(UiPrefsService);
 
   /** Background video does not autoplay when the user asks for reduced motion. */
   readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -57,7 +59,7 @@ export class App implements OnInit, OnDestroy {
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.store.load(), this.stats.load(), this.bg.load().catch((e) => console.error('Backgrounds failed to load', e))]);
+    await Promise.all([this.store.load(), this.stats.load(), this.uiPrefs.load(), this.bg.load().catch((e) => console.error('Backgrounds failed to load', e))]);
   }
 
   ngOnDestroy(): void {

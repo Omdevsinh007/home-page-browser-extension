@@ -21,24 +21,95 @@
   z-index: 2;
 }
 
-/* Add tile: the shared glass material, lighter fill */
-.add-links {
-  position: relative;
-  width: 112px;
-  height: 140px;
-  cursor: pointer;
-  border-radius: var(--radius-tile);
-  overflow: hidden;
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: var(--glass-filter);
-  backdrop-filter: var(--glass-filter);
-  border: var(--glass-stroke);
-  box-shadow: var(--glass-highlight), var(--glass-shadow);
-  transition: transform var(--transition-smooth);
-  display: flex;
-  flex-direction: column;
+/* Shortcut layouts */
+.shortcuts-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 144px);
   justify-content: center;
-  align-items: center;
+}
+
+.shortcuts-tiles .shortcut-slot {
+  display: flex;
+  justify-content: center;
+  padding: 14px 16px;
+}
+
+.shortcuts-compact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.shortcut-add {
+  border-style: dashed;
+}
+
+/* Status banners and empty state */
+.banner {
+  margin: 0 auto 16px;
+  max-width: 640px;
+  padding: 10px 16px;
+  border-radius: var(--radius-column);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.banner-danger {
+  border-color: var(--danger);
+}
+
+.banner-action {
+  margin-left: 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.empty {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: var(--radius-dialog);
+  text-align: center;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.empty-text {
+  margin: 8px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pill-button {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: 500 var(--text-sm) var(--font);
+  cursor: pointer;
+}
+
+.pill-button:hover {
+  background: var(--glass-fill-strong);
 }
 
 /* DRAG AND DROP STATES */
@@ -47,10 +118,19 @@
 }
 
 .custom-shortcut-placeholder {
+  width: 112px;
+  height: 140px;
+  margin: 14px 16px;
   background: var(--glass-fill);
   border: 1px dashed var(--text-dim);
-  min-height: 60px;
   border-radius: var(--radius-tile);
+}
+
+.custom-shortcut-placeholder.is-compact {
+  width: 120px;
+  height: 40px;
+  margin: 0;
+  border-radius: var(--radius-pill);
 }
 
 /* Corner controls */
@@ -68,18 +148,6 @@
 .settings-trigger mat-icon {
   width: 20px;
   height: 20px;
-}
-
-.glass-button {
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: var(--glass-filter);
-  backdrop-filter: var(--glass-filter);
-  border: var(--glass-stroke);
-  box-shadow: var(--glass-highlight), var(--glass-shadow);
-}
-
-.glass-button:hover {
-  background: var(--glass-fill-strong);
 }
 
 ::ng-deep .mat-mdc-menu-content {

@@ -1,10 +1,10 @@
-<div class="search relative mx-auto w-full max-w-xl">
-  <label class="search-field flex items-center gap-2 rounded-full px-4 py-2.5">
-    <mat-icon class="!text-white/60" aria-hidden="true" svgIcon="search" />
+<div class="search relative mx-auto w-full max-w-[580px]">
+  <label class="search-field flex items-center gap-2.5">
+    <mat-icon class="search-icon" aria-hidden="true" svgIcon="search" />
     <input
       #input
       type="search"
-      class="min-w-0 flex-1 bg-transparent text-white placeholder:text-white/50 outline-none"
+      class="min-w-0 flex-1 bg-transparent outline-none"
       placeholder="Search links"
       aria-label="Search links"
       role="combobox"
@@ -17,11 +17,11 @@
       (input)="onInput(input.value)"
       (keydown)="onInputKey($event)"
     />
-    <kbd class="hidden rounded border border-white/20 px-1.5 text-[11px] text-white/50 sm:inline">/</kbd>
+    <kbd class="search-kbd hidden sm:inline">/</kbd>
   </label>
 
   @if (open()) {
-    <div id="search-results" class="results custom-scroll absolute inset-x-0 top-full z-40 mt-2 max-h-[min(60dvh,calc(100dvh-12rem))] overflow-y-auto rounded-2xl p-2" role="listbox" aria-label="Search results">
+    <div id="search-results" class="results custom-scroll absolute inset-x-0 top-full z-40 mt-2 max-h-[min(60dvh,calc(100dvh-12rem))] overflow-y-auto p-2" role="listbox" aria-label="Search results">
       @if (result().noMatch) {
         <p class="px-3 pt-2 pb-1 text-sm font-medium text-white" data-testid="no-match">No links match "{{ query() }}"</p>
         <p class="px-3 pb-2 text-xs text-white/50">All your links:</p>
