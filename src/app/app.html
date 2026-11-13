@@ -58,23 +58,22 @@
     }
   </div>
 
-  <!-- Data Management Floating Button (Invisible until hover) -->
-  <div class="absolute top-6 right-6 z-50 opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 flex gap-2">
-    <button type="button" aria-label="Settings"
-      class="glass-button hover:cursor-pointer w-10 h-10 rounded-full flex justify-center items-center group shadow-sm bg-white/10 backdrop-blur-md"
-      [matMenuTriggerFor]="dataMenu">
-      <mat-icon class="text-white group-hover:rotate-90 transition-transform" svgIcon="more_vert" />
-    </button>
-  </div>
-
-  <!-- Background manager -->
+  <!-- Settings: the one corner control -->
   <div class="absolute bottom-6 right-6 z-50">
-    <button type="button" (click)="openBackgrounds()" aria-label="Backgrounds"
-      class="glass-button hover:cursor-pointer w-12 h-12 rounded-full flex justify-center items-center group transition-all hover:scale-110">
-      <mat-icon class="text-white group-hover:rotate-12 transition-transform" svgIcon="wallpaper" />
+    <button type="button" #settingsButton cdkOverlayOrigin #settingsOrigin="cdkOverlayOrigin"
+      class="settings-trigger glass on-glass" aria-label="Settings" aria-haspopup="dialog"
+      [attr.aria-expanded]="settingsOpen()" (click)="toggleSettings()">
+      <mat-icon svgIcon="settings" aria-hidden="true" /><span>Settings</span>
     </button>
   </div>
 </div>
+
+<ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="settingsOrigin" [cdkConnectedOverlayOpen]="settingsOpen()"
+  [cdkConnectedOverlayPositions]="settingsPositions" cdkConnectedOverlayHasBackdrop
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop" (backdropClick)="closeSettings()"
+  (detach)="closeSettings()" (overlayKeydown)="onSettingsKeydown($event)">
+  <app-settings-panel (backgrounds)="closeSettings(); openBackgrounds()" (importFile)="closeSettings(); fileInput.click()" />
+</ng-template>
 
 <mat-menu #addMenu="matMenu"
   class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[150px] !shadow-2xl">
@@ -84,23 +83,4 @@
     group</button>
 </mat-menu>
 
-<mat-menu #dataMenu="matMenu"
-  class="!bg-black/60 !backdrop-blur-xl !border !border-white/10 !rounded-xl !p-1 !min-w-[180px] !shadow-2xl">
-  <button mat-menu-item (click)="data.exportAll()" class="!text-white hover:!bg-white/10 !rounded-lg">
-    <mat-icon class="!text-white" svgIcon="download" />
-    <span>Export data</span>
-  </button>
-  <button mat-menu-item (click)="data.exportForV2x()" class="!text-white hover:!bg-white/10 !rounded-lg">
-    <mat-icon class="!text-white" svgIcon="history" />
-    <span>Export for v2.x</span>
-  </button>
-  <button mat-menu-item (click)="fileInput.click()" class="!text-white hover:!bg-white/10 !rounded-lg">
-    <mat-icon class="!text-white" svgIcon="upload" />
-    <span>Import data</span>
-  </button>
-  <button mat-menu-item (click)="data.downloadBackups()" class="!text-white hover:!bg-white/10 !rounded-lg">
-    <mat-icon class="!text-white" svgIcon="backup" />
-    <span>Download backups</span>
-  </button>
-</mat-menu>
 <input type="file" #fileInput accept=".json" class="hidden" (change)="onImportData($event)">

@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { OverlayModule } from '@angular/cdk/overlay';
+import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
+import { SettingsPanel } from './components/settings-panel/settings-panel';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
@@ -28,7 +29,7 @@ const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, MatRippleModule, GroupLink, DragDropModule, OverlayModule],
+  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, MatRippleModule, GroupLink, DragDropModule, OverlayModule, SettingsPanel],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +45,13 @@ export class App implements OnInit, OnDestroy {
 
   /** Background video does not autoplay when the user asks for reduced motion. */
   readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  readonly settingsOpen = signal(false);
+  private settingsButton = viewChild.required<ElementRef<HTMLButtonElement>>('settingsButton');
+  /** Above the Settings button, right edges aligned, 8px gap. */
+  readonly settingsPositions: ConnectedPosition[] = [
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -8 },
+  ];
 
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
@@ -65,6 +73,25 @@ export class App implements OnInit, OnDestroy {
       ariaLabelledBy: 'background-dialog-title',
       autoFocus: 'first-tabbable',
     });
+  }
+
+  toggleSettings(): void {
+    if (this.settingsOpen()) this.closeSettings();
+    else this.settingsOpen.set(true);
+  }
+
+  /** Closes the popover and returns focus to its button. */
+  closeSettings(): void {
+    if (!this.settingsOpen()) return;
+    this.settingsOpen.set(false);
+    this.settingsButton().nativeElement.focus();
+  }
+
+  onSettingsKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeSettings();
+    }
   }
 
   // ── links ──────────────────────────────────────────────────────

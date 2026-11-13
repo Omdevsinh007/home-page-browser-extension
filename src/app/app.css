@@ -54,6 +54,22 @@
 }
 
 /* Corner controls */
+.settings-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: var(--radius-pill);
+  font: 500 var(--text-sm) var(--font);
+  cursor: pointer;
+}
+
+.settings-trigger mat-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .glass-button {
   background: var(--glass-fill);
   -webkit-backdrop-filter: var(--glass-filter);
