@@ -1,364 +1,201 @@
-import {
-  AfterViewInit,
-  Component,
-  computed,
-  CUSTOM_ELEMENTS_SCHEMA,
-  DestroyRef,
-  ElementRef,
-  inject,
-  OnDestroy,
-  OnInit,
-  signal,
-  ViewChild,
-  WritableSignal,
-  ChangeDetectionStrategy
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, DestroyRef, DOCUMENT, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VideoService, VideoItem } from './services/video.service';
-import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
+import { SettingsPanel } from './components/settings-panel/settings-panel';
+import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
-import {
-  CdkDragDrop,
-  DragDropModule,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { map, Observable, ReplaySubject } from 'rxjs';
-import { ColorDecoder } from "color-decoder";
+import { MatRippleModule } from '@angular/material/core';
+import { firstValueFrom } from 'rxjs';
+import { BackgroundStore } from './services/background.store';
+import { BackgroundDialog } from './components/background-dialog/background-dialog';
 import { Link } from './components/link/link';
-import { ShortcutDialog } from './components/shortcut-dialog/shortcut-dialog';
-import { GroupName } from './components/group-name/group-name';
 import { GroupLink } from './components/group-link/group-link';
-import { GroupDialog } from './components/group-dialog/group-dialog';
-import { SaveLinks } from './services/save-links';
-import { Shortcut } from './models/shortcut';
-import { environment } from '../environments/environment';
+import { GroupDialog, GroupDialogData } from './components/group-dialog/group-dialog';
+import { LinkDialog, LinkDialogData, LinkDialogResult } from './components/link-dialog/link-dialog';
+import { NameDialog, NameDialogData } from './components/name-dialog/name-dialog';
+import { SearchBox } from './components/search-box/search-box';
+import { GroupTile, ShortcutTile, TopItem } from './core/model';
+import { addGroup, addShortcut, moveTile, removeTile, updateTile } from './core/section-ops';
+import { LinksStore } from './services/links-store';
+import { LinkStatsService } from './services/link-stats.service';
+import { ConfirmService } from './services/confirm.service';
+import { NotifyService } from './services/notify.service';
+import { DataTransferService } from './services/data-transfer.service';
+import { UiPrefsService } from './services/ui-prefs.service';
+
+const SMALL_DIALOG = { hasBackdrop: true, maxWidth: '600px', width: '100%' };
 
 @Component({
   selector: 'app-root',
-  imports: [
-    CommonModule,
-    FormsModule,
-    Link,
-    MatIcon,
-    MatMenuModule,
-    GroupLink,
-    DragDropModule,
-    ColorDecoder,
-    OverlayModule
-  ],
+  imports: [CommonModule, FormsModule, Link, SearchBox, MatIcon, MatMenuModule, MatRippleModule, GroupLink, DragDropModule, OverlayModule, SettingsPanel],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class App implements OnInit, AfterViewInit, OnDestroy {
-  private storageService = inject(SaveLinks);
+export class App implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
-  private destroyRef = inject(DestroyRef);
-  public videoService = inject(VideoService);
+  private confirm = inject(ConfirmService);
+  private notify = inject(NotifyService);
+  private stats = inject(LinkStatsService);
+  readonly data = inject(DataTransferService);
+  readonly store = inject(LinksStore);
+  readonly bg = inject(BackgroundStore);
+  readonly uiPrefs = inject(UiPrefsService);
+
+  /** Background video does not autoplay when the user asks for reduced motion. */
+  readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  private bgVideo = viewChild<ElementRef<HTMLVideoElement>>('bgVideo');
+  private resumeVideo = false;
+
+  constructor() {
+    // Pause the background video while the tab is hidden; resume only if it was playing.
+    const doc = inject(DOCUMENT);
+    const onVisibility = () => {
+      const video = this.bgVideo()?.nativeElement;
+      if (!video) return;
+      if (doc.visibilityState === 'hidden') {
+        this.resumeVideo = !video.paused;
+        if (this.resumeVideo) video.pause();
+      } else if (this.resumeVideo) {
+        this.resumeVideo = false;
+        if (!this.reducedMotion) video.play().catch(() => undefined);
+      }
+    };
+    doc.addEventListener('visibilitychange', onVisibility);
+    inject(DestroyRef).onDestroy(() => doc.removeEventListener('visibilitychange', onVisibility));
+  }
+
+  readonly settingsOpen = signal(false);
+  private settingsButton = viewChild.required<ElementRef<HTMLButtonElement>>('settingsButton');
+  /** Above the Settings button, right edges aligned, 8px gap. */
+  readonly settingsPositions: ConnectedPosition[] = [
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -8 },
+  ];
 
   /** Tracks the currently open group dialog to allow seamless switching */
   private groupDialogRef: MatDialogRef<GroupDialog> | null = null;
 
-  protected environment = environment;
-
-  savedLinks$!: Observable<Shortcut[]>;
-  activeVideo$ = this.videoService.activeVideo$;
-  videos$ = this.videoService.videos$;
-  isVideoMenuOpen = signal(false);
-  iconColor = signal('#ffffff');
-
-  videoPoster = computed(() => this.environment.poster);
-
-  linksData: WritableSignal<Shortcut[]> = signal([]);
-
-  @ViewChild('mainVideo') mainVideo?: ElementRef<HTMLVideoElement>;
-  @ViewChild('mainImage') mainImage?: ElementRef<HTMLImageElement>;
-
-  private animationFrameId?: number;
-  private lastSampleTime = 0;
-  private destroyed = false;
-  private worker!: Worker;
-
   async ngOnInit(): Promise<void> {
-    if (this.environment.isProd) {
-      await this.storageService.retrieveSavedLinks();
-      this.savedLinks$ = this.storageService.getSavedLinks();
-    } else {
-      this.savedLinks$ = new ReplaySubject<Shortcut[]>(1);
-      this.loadDataForDev(this.savedLinks$);
-    }
-    this.savedLinks$
-      .pipe(
-        map((s) => s.sort((a, b) => a?.position - b?.position)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: (data) => {
-          this.linksData.set(data);
-        },
-      });
-  }
-
-  loadDataForDev(data: any) {
-    data.next(this.environment.dummyData);
-  }
-
-  ngAfterViewInit(): void {
-    if (typeof Worker !== 'undefined') {
-      this.worker = new Worker(new URL('./workers/color-extraction.worker', import.meta.url), { type: 'module' });
-      
-      this.worker.onmessage = ({ data }) => {
-        const { r, g, b } = data;
-        document.documentElement.style.setProperty('--theme-rgb', `${r}, ${g}, ${b}`);
-      };
-      
-      this.extractColorLoop();
-    }
+    await Promise.all([this.store.load(), this.stats.load(), this.uiPrefs.load(), this.bg.load().catch((e) => console.error('Backgrounds failed to load', e))]);
   }
 
   ngOnDestroy(): void {
-    this.destroyed = true;
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = undefined;
-    }
-    if (this.worker) {
-      this.worker.terminate();
-    }
-    // Close any open group dialog
     this.groupDialogRef?.close();
     this.groupDialogRef = null;
   }
 
-  private extractColorLoop = () => {
-    // Stop loop if component has been destroyed (prevents race condition)
-    if (this.destroyed) return;
-
-    // Stop loop if no video exists
-    if (!this.mainVideo?.nativeElement || !this.worker) {
-      this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
-      return;
-    }
-
-    const video = this.mainVideo.nativeElement;
-
-    // Only sample if the video is actually playing and has data
-    if (video.readyState >= 2 && !video.paused && !video.ended) {
-      const now = performance.now();
-
-      // Throttle to roughly 2 times per second (every 500ms) for high performance
-      if (now - this.lastSampleTime > 500) {
-        this.lastSampleTime = now;
-        this.extractColorFromSource(video);
-      }
-    }
-
-    this.animationFrameId = requestAnimationFrame(this.extractColorLoop);
-  };
-
-  onImageLoad(event: Event) {
-    const img = event.target as HTMLImageElement;
-    // We do NOT want to cancel the frame loop entirely, otherwise
-    // switching back to a video will leave the loop permanently stopped.
-    this.extractColorFromSource(img);
+  openBackgrounds(): void {
+    this.dialog.open(BackgroundDialog, {
+      maxWidth: '360px',
+      width: '100%',
+      position: { bottom: '88px', right: '24px' },
+      ariaLabelledBy: 'background-dialog-title',
+      autoFocus: 'first-tabbable',
+    });
   }
 
-  private async extractColorFromSource(source: CanvasImageSource) {
-    if (!this.worker) return;
+  toggleSettings(): void {
+    if (this.settingsOpen()) this.closeSettings();
+    else this.settingsOpen.set(true);
+  }
 
-    try {
-      const imageBitmap = await createImageBitmap(source, {
-        resizeWidth: 64,
-        resizeHeight: 64,
-        resizeQuality: 'low'
+  /** Closes the popover and returns focus to its button. */
+  closeSettings(): void {
+    if (!this.settingsOpen()) return;
+    this.settingsOpen.set(false);
+    this.settingsButton().nativeElement.focus();
+  }
+
+  onSettingsKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeSettings();
+    }
+  }
+
+  // ── links ──────────────────────────────────────────────────────
+
+  async addShortcut(): Promise<void> {
+    const result = await this.ask<LinkDialogResult>(LinkDialog, { title: 'Add shortcut' } satisfies LinkDialogData);
+    if (result) await this.save((items) => addShortcut(items, result.name, result.url, Date.now()));
+  }
+
+  async editShortcut(tile: ShortcutTile): Promise<void> {
+    const data: LinkDialogData = { title: 'Edit shortcut', initial: { name: tile.name, url: tile.url } };
+    const result = await this.ask<LinkDialogResult>(LinkDialog, data);
+    if (result) await this.save((items) => updateTile(items, tile.id, result));
+  }
+
+  async removeTile(tile: TopItem): Promise<void> {
+    if (tile.type === 'Group') {
+      const count = tile.sections.reduce((n, s) => n + s.links.length, 0);
+      const ok = await this.confirm.ask({
+        title: `Delete group “${tile.name}”?`,
+        message: `This removes the group and its ${count} link${count === 1 ? '' : 's'}.`,
+        confirmText: 'Delete group',
+        danger: true,
       });
-      
-      this.worker.postMessage({ imageBitmap }, [imageBitmap]);
-    } catch (e) {
-      // Ignore cross-origin errors or empty sources
+      if (!ok) return;
     }
+    await this.save((items) => removeTile(items, tile.id));
   }
 
-  toggleVideoMenu() {
-    this.isVideoMenuOpen.set(!this.isVideoMenuOpen());
+  async addGroup(): Promise<void> {
+    const name = await this.ask<string>(NameDialog, { title: 'New group', label: 'Group name', confirmText: 'Create' } satisfies NameDialogData);
+    if (!name) return;
+    await this.save((items) => addGroup(items, name, Date.now()));
+    const created = this.store.items().at(-1);
+    if (created?.type === 'Group') this.openGroup(created);
   }
 
-  async onVideoUploaded(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      try {
-        await this.videoService.addVideo(file);
-      } catch (err: any) {
-        alert(err.message || 'Error uploading video');
-      }
-      input.value = ''; // Reset input
-    }
+  async renameGroup(tile: GroupTile): Promise<void> {
+    const data: NameDialogData = { title: 'Rename group', label: 'Group name', initial: tile.name, confirmText: 'Save' };
+    const name = await this.ask<string>(NameDialog, data);
+    if (name) await this.save((items) => updateTile(items, tile.id, { name }));
   }
 
-  async deleteVideo(id: string, event: Event) {
-    event.stopPropagation();
-    try {
-      await this.videoService.removeVideo(id);
-    } catch (err: any) {
-      alert(err.message || 'Error deleting video');
-    }
-  }
-
-  async selectVideo(id: string) {
-    await this.videoService.setActiveVideo(id);
-  }
-
-  addShortcut() {
-    this.dialog.open(ShortcutDialog, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-    });
-  }
-
-  editShortcut(value: Shortcut) {
-    this.dialog.open(ShortcutDialog, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-      data: value,
-    });
-  }
-
-  async removeShortcut(id: string) {
-    await this.storageService.removeSavedLink(id);
-  }
-
-  addGroup() {
-    this.dialog.open(GroupName, {
-      hasBackdrop: true,
-      maxWidth: '600px',
-      width: '100%',
-    });
-  }
-
-  openShortcutGroup(shortcut: Shortcut) {
+  openGroup(tile: GroupTile): void {
+    this.groupDialogRef?.close();
     this.groupDialogRef = this.dialog.open(GroupDialog, {
-      maxWidth: '70dvw',
-      maxHeight: '70dvh',
+      maxWidth: '92dvw',
+      maxHeight: '85dvh',
       height: '100%',
-      width: '100%',
+      width: '1200px',
       id: 'dialog-group-overlay',
-      data: {
-        shortcut: shortcut,
-        allGroups: this.linksData().filter(l => l.type === 'Group')
-      },
+      data: { groupId: tile.id } satisfies GroupDialogData,
       hasBackdrop: true,
-      panelClass: 'group-dialog-panel'
+      panelClass: 'group-dialog-panel',
+      ariaLabelledBy: 'group-dialog-title',
     });
-
-    // Clean up the ref when dialog is closed
-    this.groupDialogRef.afterClosed()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.groupDialogRef = null;
-      });
+    this.groupDialogRef.afterClosed().subscribe(() => (this.groupDialogRef = null));
   }
 
-  async drop(event: CdkDragDrop<Shortcut[]>) {
-    moveItemInArray(this.linksData(), event.previousIndex, event.currentIndex);
-    this.linksData.update((value) =>
-      value.map((data, index) => ({ ...data, position: index })),
-    );
-    await this.storageService.setShortcuts(this.linksData());
+  async drop(event: CdkDragDrop<TopItem[]>): Promise<void> {
+    if (event.previousIndex === event.currentIndex) return;
+    await this.save((items) => moveTile(items, event.previousIndex, event.currentIndex));
   }
 
-  updateSettings(settings: Partial<VideoItem>) {
-    this.videoService.updateActiveBackgroundSettings(settings);
-  }
-
-  onBrightnessChange(event: Event) {
+  async onImportData(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    this.updateSettings({ brightness: parseInt(input.value, 10) });
+    const file = input.files?.[0];
+    input.value = '';
+    if (file) await this.data.importText(await file.text());
   }
 
-  onBlurChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.updateSettings({ blur: parseInt(input.value, 10) });
-  }
-
-  exportData() {
-    const data = this.linksData();
-    const dataStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'shortcuts-export.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  private isValidShortcutData(data: any): boolean {
-    if (!Array.isArray(data)) return false;
-
-    for (const item of data) {
-      if (!item || typeof item !== 'object') return false;
-      if (typeof item.id !== 'string') return false;
-      if (item.type !== 'Shortcut' && item.type !== 'Group') return false;
-      if (typeof item.position !== 'number') return false;
-
-      if (item.name !== null && typeof item.name !== 'string') return false;
-      if (item.url !== null && typeof item.url !== 'string') return false;
-
-      if (item.group !== null) {
-        if (!Array.isArray(item.group)) return false;
-        for (const g of item.group) {
-          if (!g || typeof g !== 'object') return false;
-          if (typeof g.id !== 'string') return false;
-          if (typeof g.name !== 'string') return false;
-          if (typeof g.url !== 'string') return false;
-          if (typeof g.position !== 'number') return false;
-        }
-      }
+  private async save(fn: (items: TopItem[]) => TopItem[]): Promise<void> {
+    try {
+      await this.store.update(fn);
+    } catch (error) {
+      this.notify.error(error instanceof Error ? error.message : 'Could not save changes');
     }
-    return true;
   }
 
-  async onImportData(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
-        alert('Invalid file type. Please upload a JSON file.');
-        input.value = '';
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const content = e.target?.result as string;
-          const parsedData = JSON.parse(content);
-
-          if (!this.isValidShortcutData(parsedData)) {
-            throw new Error('Invalid data format. JSON does not match the required schema.');
-          }
-
-          await this.storageService.setShortcuts(parsedData as Shortcut[]);
-          this.linksData.set(parsedData as Shortcut[]);
-        } catch (error) {
-          alert('Error importing data. Please ensure the file is a valid shortcuts export.');
-          console.error('Import error:', error);
-        } finally {
-          input.value = ''; // Reset input
-        }
-      };
-      reader.readAsText(file);
-    }
+  private ask<R>(component: unknown, data: unknown): Promise<R | undefined> {
+    const ref = this.dialog.open(component as never, { ...SMALL_DIALOG, data });
+    return firstValueFrom(ref.afterClosed()) as Promise<R | undefined>;
   }
 }

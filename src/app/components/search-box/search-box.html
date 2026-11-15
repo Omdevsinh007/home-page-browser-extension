@@ -1,0 +1,60 @@
+<div class="search relative mx-auto w-full max-w-[580px]">
+  <label class="search-field flex items-center gap-2.5">
+    <mat-icon class="search-icon" aria-hidden="true" svgIcon="search" />
+    <input
+      #input
+      type="search"
+      class="min-w-0 flex-1 bg-transparent outline-none"
+      placeholder="Search links"
+      aria-label="Search links"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-controls="search-results"
+      [attr.aria-expanded]="open()"
+      [attr.aria-activedescendant]="activeId()"
+      autocomplete="off"
+      spellcheck="false"
+      (input)="onInput(input.value)"
+      (keydown)="onInputKey($event)"
+    />
+    <kbd class="search-kbd hidden sm:inline">/</kbd>
+  </label>
+
+  @if (open()) {
+    <div id="search-results" class="results custom-scroll absolute inset-x-0 top-full z-40 mt-2 max-h-[min(60dvh,calc(100dvh-12rem))] overflow-y-auto p-2" role="listbox" aria-label="Search results">
+      @if (result().noMatch) {
+        <p class="px-3 pt-2 pb-1 text-sm font-medium text-[color:var(--text)]" data-testid="no-match">No links match "{{ query() }}"</p>
+        <p class="px-3 pb-2 text-xs text-[color:var(--text-dim)]">All your links:</p>
+      }
+      @for (group of groups(); track group.label) {
+        @if (group.label) {
+          <p class="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-[color:var(--text-dim)]" data-testid="result-group" role="presentation">{{ group.label }}</p>
+        }
+        @for (option of group.options; track option.entry.linkId) {
+          <div
+            role="option"
+            [id]="'search-opt-' + option.index"
+            [attr.aria-selected]="option.index === activeIndex()"
+            class="option flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-[color:var(--text)]"
+            [class.active]="option.index === activeIndex()"
+            (mousedown)="$event.preventDefault()"
+            (mouseenter)="activeIndex.set(option.index)"
+            (click)="onOptionClick($event, option.entry)"
+            (auxclick)="onOptionClick($event, option.entry)"
+          >
+            <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--glass-fill)]"><app-favicon [url]="option.entry.url" [name]="option.entry.name" /></span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm">{{ option.entry.name }}</span>
+              @if (!result().noMatch) {
+                <span class="block truncate text-xs text-[color:var(--text-dim)]">{{ pathOf(option.entry) }}</span>
+              }
+            </span>
+            @if (option.entry.host) {
+              <span class="shrink-0 truncate text-xs text-[color:var(--text-faint)] max-w-[35%]">{{ option.entry.host }}</span>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

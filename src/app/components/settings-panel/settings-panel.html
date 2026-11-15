@@ -1,0 +1,29 @@
+<div class="panel glass glass-dark" role="dialog" aria-label="Settings" cdkTrapFocus cdkTrapFocusAutoCapture>
+  <h2 id="settings-style-label" class="label">Shortcut style</h2>
+  <div class="segmented" role="radiogroup" aria-labelledby="settings-style-label">
+    @for (option of styles; track option.value; let i = $index) {
+      <button #styleButton type="button" role="radio" [attr.aria-checked]="prefs.shortcutStyle() === option.value"
+        [tabIndex]="prefs.shortcutStyle() === option.value ? 0 : -1"
+        (click)="prefs.setShortcutStyle(option.value)" (keydown)="onStyleKeydown($event, i)">{{ option.label }}</button>
+    }
+  </div>
+
+  <div class="rows">
+    <button type="button" class="row" (click)="backgrounds.emit()">
+      <mat-icon svgIcon="wallpaper" aria-hidden="true" /><span>Backgrounds…</span>
+    </button>
+    <hr class="separator" />
+    <button type="button" class="row" (click)="data.exportAll(); done.emit()">
+      <mat-icon svgIcon="download" aria-hidden="true" /><span>Export data</span>
+    </button>
+    <button type="button" class="row" (click)="data.exportForV2x(); done.emit()">
+      <mat-icon svgIcon="history" aria-hidden="true" /><span>Export for older version (2.x)</span>
+    </button>
+    <button type="button" class="row" (click)="importFile.emit()">
+      <mat-icon svgIcon="upload" aria-hidden="true" /><span>Import data</span>
+    </button>
+    <button type="button" class="row" (click)="data.downloadBackups(); done.emit()">
+      <mat-icon svgIcon="backup" aria-hidden="true" /><span>Download backups</span>
+    </button>
+  </div>
+</div>

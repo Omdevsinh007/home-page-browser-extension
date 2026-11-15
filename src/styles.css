@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+@import "./styles/tokens.css";
+@import "./styles/shortcuts.css";
 
 html,
 body {
@@ -8,35 +10,7 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-:root {
-  --glass-radius: 26px;
-  --glass-radius-sm: 16px;
-
-  --glass-blur: 20px;
-  --glass-saturation: 180%;
-  --glass-brightness: 1.08;
-
-  --glass-bg: rgba(18, 20, 28, 0.05);
-
-  --glass-white-1: rgba(255, 255, 255, 0.30);
-  --glass-white-2: rgba(255, 255, 255, 0.18);
-  --glass-white-3: rgba(255, 255, 255, 0.08);
-  --glass-white-4: rgba(255, 255, 255, 0.03);
-
-  --glass-blue: rgba(120, 180, 255, 0.20);
-  --glass-pink: rgba(255, 140, 200, 0.20);
-
-  --glass-border: rgba(255, 255, 255, 0.18);
-
-  --glass-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 12px 40px rgba(0, 0, 0, .18),
-    0 30px 80px rgba(0, 0, 0, .22);
-
-  --glass-text: rgba(255, 255, 255, .96);
+  font-family: var(--font);
 }
 
 /* ───────────────────────────────────────────── */
@@ -49,22 +23,6 @@ body {
   background: transparent;
 }
 
-
-
-[ngMenu] [role='separator'] {
-  height: 1px;
-
-  margin: 4px 8px;
-
-  border: none;
-
-  background:
-    linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, .18),
-      transparent);
-}
-
 /* ───────────────────────────────────────────── */
 /* MATERIAL DIALOG — GLASS SURFACE              */
 /* ───────────────────────────────────────────── */
@@ -72,58 +30,151 @@ body {
 .mat-mdc-dialog-surface {
   --mat-dialog-container-color: transparent;
 
-  background:
-    radial-gradient(circle at 80% 15%,
-      var(--glass-pink),
-      transparent 45%),
-    radial-gradient(circle at 20% 85%,
-      var(--glass-blue),
-      transparent 50%),
-    linear-gradient(135deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0.02) 100%),
-    rgba(18, 20, 28, 0.45) !important;
-
-  backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.05) !important;
-
-  border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.32) !important;
-  border-left: 1.5px solid rgba(255, 255, 255, 0.28) !important;
-  border-radius: 28px !important;
-
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 20px 60px rgba(0, 0, 0, 0.35),
-    0 40px 100px rgba(0, 0, 0, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 0 40px rgba(255, 255, 255, 0.03) !important;
-
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter) !important;
+  backdrop-filter: var(--glass-filter) !important;
+  border: var(--glass-stroke) !important;
+  border-radius: var(--radius-dialog) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+  color: var(--text);
   overflow: hidden;
   isolation: isolate;
 }
 
-/* Subtle inner highlight for the dialog surface */
-.mat-mdc-dialog-surface::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 15% 5%,
-      rgba(255, 255, 255, 0.35),
-      transparent 25%),
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.12),
-      transparent 30%);
-  z-index: 0;
+/* Material text uses the system font (the prebuilt theme names only Roboto, which is not bundled). */
+html:root {
+  --mat-sys-body-large-font: var(--font);
+  --mat-sys-body-medium-font: var(--font);
+  --mat-sys-body-small-font: var(--font);
+  --mat-sys-display-large-font: var(--font);
+  --mat-sys-display-medium-font: var(--font);
+  --mat-sys-display-small-font: var(--font);
+  --mat-sys-headline-large-font: var(--font);
+  --mat-sys-headline-medium-font: var(--font);
+  --mat-sys-headline-small-font: var(--font);
+  --mat-sys-label-large-font: var(--font);
+  --mat-sys-label-medium-font: var(--font);
+  --mat-sys-label-small-font: var(--font);
+  --mat-sys-title-large-font: var(--font);
+  --mat-sys-title-medium-font: var(--font);
+  --mat-sys-title-small-font: var(--font);
 }
 
-/* Dialog backdrop glass tint */
+/* Dialog text, buttons and fields on glass */
+.mat-mdc-dialog-container {
+  --mat-dialog-subhead-color: var(--text);
+  --mat-dialog-subhead-font: var(--font);
+  --mat-dialog-subhead-size: var(--text-lg);
+  --mat-dialog-subhead-weight: 600;
+  --mat-dialog-supporting-text-color: var(--text-dim);
+  --mat-dialog-supporting-text-font: var(--font);
+
+  --mat-button-filled-container-color: var(--glass-fill-strong);
+  --mat-button-filled-label-text-color: var(--text);
+  --mat-button-filled-container-shape: var(--radius-pill);
+  --mat-button-text-label-text-color: var(--text-dim);
+  --mat-button-text-container-shape: var(--radius-pill);
+
+  --mat-form-field-outlined-outline-width: 1px;
+  --mat-form-field-outlined-focus-outline-width: 1px;
+  --mat-form-field-outlined-outline-color: var(--glass-fill-strong);
+  --mat-form-field-outlined-hover-outline-color: var(--glass-stroke-focus);
+  --mat-form-field-outlined-focus-outline-color: var(--glass-stroke-focus);
+  --mat-form-field-outlined-label-text-color: var(--text-dim);
+  --mat-form-field-outlined-focus-label-text-color: var(--text);
+  --mat-form-field-outlined-input-text-color: var(--text);
+  --mat-form-field-outlined-caret-color: var(--text);
+  --mat-form-field-outlined-container-shape: var(--radius-row);
+
+  /* Same type scale as the rest of the app */
+  --mat-form-field-container-text-font: var(--font);
+  --mat-form-field-container-text-size: var(--text-sm);
+  --mat-form-field-outlined-label-text-font: var(--font);
+  --mat-form-field-outlined-label-text-size: var(--text-sm);
+  --mat-form-field-subscript-text-font: var(--font);
+  --mat-form-field-subscript-text-size: var(--text-xs);
+  --mat-form-field-error-text-color: var(--danger);
+  --mat-form-field-outlined-error-outline-color: var(--danger);
+  --mat-form-field-outlined-error-focus-outline-color: var(--danger);
+  --mat-form-field-outlined-error-label-text-color: var(--danger);
+  --mat-button-filled-label-text-weight: 500;
+  --mat-button-text-label-text-weight: 500;
+  --mat-button-filled-horizontal-padding: 20px;
+
+  /* A disabled primary button stays visible, just quieter */
+  --mat-button-filled-disabled-container-color: var(--glass-fill-faint);
+  --mat-button-filled-disabled-label-text-color: var(--text-faint);
+}
+
+.mat-mdc-dialog-container .mat-mdc-unelevated-button.danger {
+  --mat-button-filled-container-color: var(--danger-fill);
+}
+
+/* Material menus in the glass material */
+.mat-mdc-menu-panel.glass-menu {
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: var(--glass-stroke);
+  border-radius: var(--radius-popover) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+  padding: 4px;
+  min-width: 160px;
+}
+
+.glass-menu .mat-mdc-menu-item {
+  min-height: 36px;
+  border-radius: var(--radius-row);
+  color: var(--text);
+  --mat-menu-item-label-text-color: var(--text);
+  --mat-menu-item-label-text-font: var(--font);
+  --mat-menu-item-label-text-size: var(--text-sm);
+  --mat-menu-item-icon-color: var(--text-dim);
+}
+
+.glass-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background: var(--glass-fill-strong);
+}
+
+.glass-menu .mat-mdc-menu-item.danger {
+  --mat-menu-item-label-text-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Snackbars in the glass material */
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  background: var(--glass-fill-dark) !important;
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: var(--glass-stroke);
+  border-radius: var(--radius-popover) !important;
+  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  --mat-snack-bar-supporting-text-color: var(--text);
+  --mat-snack-bar-button-color: var(--text);
+  --mat-snack-bar-supporting-text-font: var(--font);
+}
+
+/* Dialog backdrop tint */
 .cdk-overlay-dark-backdrop {
-  background: rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: var(--backdrop) !important;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

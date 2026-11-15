@@ -1,73 +1,56 @@
-# Home Page Chrome Extension
+# Custom Homepage
 
-A Chrome extension built with Angular that overrides your browser's new tab/home page with a customizable dashboard. Organize your web with shortcuts and grouped links — keep similar links together for quick, clean access every time you open a new tab.
+A Chrome extension (Manifest V3) that replaces the new tab page with your own dashboard of shortcuts and link groups, on top of a background image or video of your choice.
 
 ## Features
 
-- **Custom Home Page** — Replaces your browser's default new tab page with a personalized dashboard
-- **Shortcuts** — Add quick-access links to your most visited or important sites
-- **Link Groups** — Organize related links into named groups, keeping similar shortcuts together in one place
+- **Shortcuts and groups.** Put single shortcuts on the new tab page, or collect related links in a group. Drag tiles to reorder them.
+- **Sections inside groups.** A group holds one or more sections, shown side by side as columns. Drag links within a section or between sections, and drag sections to reorder them. Each section can be renamed, given an accent colour, collapsed or deleted.
+- **Open one or all.** Click a link to open it. Use **Open all** on a section to open every link in it in new tabs. You are asked first when there are more than 10.
+- **Sorting.** Each section sorts manually, A–Z, by most recently opened, or by most used. Open counts are kept locally.
+- **Search.** Press `/` or `Ctrl+K` (`Cmd+K` on macOS) to search all links by name, site, section or group, with typo tolerance. `Enter` opens the selected result and `Ctrl+Enter` opens it in a background tab. If nothing matches, all links are listed below the message.
+- **Backgrounds.** Upload up to 3 images or videos and adjust fit, brightness and blur. Files are stored locally in this browser (IndexedDB).
+- **Import, export and backups.** Export your links to a JSON file and import them again. Your current links are backed up before every import, and backups can be downloaded from Settings.
+- **Shortcut style.** Show shortcuts and groups as **Tiles** or as **Compact** pills (groups show how many links they hold). Switch in **Settings**. Right-click, the context-menu key or Shift+F10 opens an item's menu.
+- **Settings.** One button in the bottom-right corner holds the shortcut style, backgrounds, export, import and backups.
+- **Glass look.** Every surface uses one frosted-glass material over your wallpaper.
+- **Offline and private.** Icons are bundled with the extension and text uses your system font. Site icons come from the browser's own favicon cache, so no request goes to a third party. A background video pauses while the tab is hidden.
 
-## Tech Stack
+## Install from source
 
-- [Angular](https://angular.dev) (generated with Angular CLI v20.0.3)
-- Chrome Extension APIs
+```bash
+npm install
+npm run build
+```
+
+1. Open `chrome://extensions/`.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked** and select the `dist/browser/` folder.
+4. Open a new tab.
+
+Links to `file:///` pages need **Allow access to file URLs** turned on in the extension's details.
+
+## Upgrading from 2.x and downgrading
+
+Version 3 stores links in a new format (`savedLinks_v2`), and migrates your 2.x data automatically on first start. A backup of the original data is kept. Background files move to IndexedDB, and the old copy is left in place.
+
+Version 3 also keeps writing a 2.x-compatible copy of your links. If you go back to 2.6.0, it shows your links as before, without sections (links from all sections of a group appear together). When you upgrade again, changes you made in 2.6.0 are merged back in. To move links to a 2.x install on another browser, use **Export for v2.x** in the menu.
 
 ## Development
 
-### Start the dev server
-
 ```bash
-ng serve
+npm start        # dev server on http://localhost:4200
+npm test         # unit tests (Vitest, jsdom)
+npm run build    # production build into dist/browser/
 ```
 
-Navigate to `http://localhost:4200/`. The app reloads automatically on file changes.
+Outside the extension (for example on the dev server), data is saved to `localStorage` instead of `chrome.storage`.
 
-### Build for production
+## Tech stack
 
-```bash
-ng build
-```
+- Angular 22 (standalone components, signals, zoneless)
+- Angular Material and CDK (dialogs, menus, drag and drop)
+- Tailwind CSS 4
+- Vitest
 
-Build artifacts are output to the `dist/` directory, optimized for performance.
-
-### Load as a Chrome Extension
-
-1. Run `ng build` to produce the `dist/` folder
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable **Developer mode** (top-right toggle)
-4. Click **Load unpacked** and select the `dist/` folder
-5. Open a new tab — your custom home page will appear
-
-## Code Scaffolding
-
-Generate a new component with:
-
-```bash
-ng generate component component-name
-```
-
-For a full list of schematics:
-
-```bash
-ng generate --help
-```
-
-## Testing
-
-### Unit tests
-
-```bash
-ng test
-```
-
-### End-to-end tests
-
-```bash
-ng e2e
-```
-
-## Additional Resources
-
-- [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli)
-- [Chrome Extension Developer Guide](https://developer.chrome.com/docs/extensions/)
+Design notes live in `docs/`: the review (`docs/review.md`), the design spec (`docs/specs/`) and the implementation plan (`docs/plans/`).

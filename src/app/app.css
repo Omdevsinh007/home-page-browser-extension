@@ -1,36 +1,5 @@
-:root {
-  --glass-radius: 22px;
-  --glass-radius-sm: 14px;
-
-  --glass-blur: 20px;
-  --glass-saturation: 180%;
-  --glass-brightness: 1.08;
-
-  --glass-bg: rgba(18, 20, 28, 0.06);
-
-  --glass-white-1: rgba(255, 255, 255, 0.30);
-  --glass-white-2: rgba(255, 255, 255, 0.18);
-  --glass-white-3: rgba(255, 255, 255, 0.08);
-  --glass-white-4: rgba(255, 255, 255, 0.03);
-
-  --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-border-strong: rgba(255, 255, 255, 0.28);
-
-  --glass-blue: rgba(120, 180, 255, 0.18);
-  --glass-pink: rgba(255, 140, 200, 0.18);
-
-  --glass-shadow:
-    0 0 0 1px rgba(255, 255, 255, .04),
-    0 12px 40px rgba(0, 0, 0, .20),
-    0 30px 80px rgba(0, 0, 0, .22);
-
-  --glass-text: rgba(255, 255, 255, .96);
-}
-
 /* Layout Containers */
 .video {
-  --controls: none;
-  --media-object-fit: cover;
   position: absolute;
   width: 100dvw;
   height: 100dvh;
@@ -38,99 +7,109 @@
   left: 0;
   z-index: 1;
   object-fit: cover;
-  aspect-ratio: 16 / 9;
 }
 
 .content-wrap {
   position: relative;
-  background-color: black;
-  width: 100dvw;
+  background-color: var(--page-bg);
+  width: 100%;
   height: 100dvh;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2;
 }
 
-.inner-wrap {
-  width: 100%;
-  padding: 0 20px;
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* PRIMARY GLASS CONTAINER */
-.input-wrap {
-  /* Multi-layered gradient for depth */
-  background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0.02) 100%);
-
-  /* Premium Frost Effect */
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-
-  /* Enhanced Borders with iOS-style lighting */
-  border: 1px solid var(--glass-border);
-  border-top: 1.5px solid var(--glass-highlight);
-  border-left: 1.5px solid var(--glass-highlight);
-  border-radius: 28px;
-
-  /* Sophisticated Depth Layering */
-  box-shadow:
-    var(--glass-shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-
-  padding-block: 28px;
-  padding-inline: 24px;
-
-  /* Smooth transitions */
-  transition: all var(--transition-smooth);
-}
-
-.input-wrap:hover {
-  background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.03) 100%);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-}
-
-/* INTERACTIVE GLASS CARD */
-.add-links {
-  position: relative;
-  width: 112px;
-  height: 144px;
-  cursor: pointer;
-  border-radius: 20px;
-  overflow: hidden;
-
-  /* Premium Background & Blur */
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(255, 255, 255, 0.05) 100%);
-
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  backdrop-filter: var(--glass-blur-sm);
-
-  /* Refined Border */
-  border: 1.5px solid var(--glass-border);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-
-  /* Display flex for centering content */
-  display: flex;
-  flex-direction: column;
+/* Shortcut layouts */
+.shortcuts-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 144px);
   justify-content: center;
-  align-items: center;
+}
+
+.shortcuts-tiles .shortcut-slot {
+  display: flex;
+  justify-content: center;
+  padding: 14px 16px;
+}
+
+.shortcuts-compact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.shortcut-add {
+  background: var(--glass-fill-faint);
+}
+
+/* Status banners and empty state */
+.banner {
+  margin: 0 auto 16px;
+  max-width: 640px;
+  padding: 10px 16px;
+  border-radius: var(--radius-column);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.banner-danger {
+  border-color: var(--danger);
+}
+
+.banner-action {
+  margin-left: 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.empty {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: var(--radius-dialog);
+  text-align: center;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.empty-text {
+  margin: 8px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pill-button {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: 500 var(--text-sm) var(--font);
+  cursor: pointer;
+}
+
+.pill-button:hover {
+  background: var(--glass-fill-strong);
 }
 
 /* DRAG AND DROP STATES */
@@ -139,69 +118,34 @@
 }
 
 .custom-shortcut-placeholder {
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.06) 0%,
-      rgba(255, 255, 255, 0.01) 100%);
-  border: 2px dashed rgba(255, 255, 255, 0.35);
-  min-height: 60px;
-  border-radius: 18px;
-  transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  backdrop-filter: blur(8px);
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+  width: 112px;
+  height: 140px;
+  margin: 14px 16px;
+  background: var(--glass-fill-faint);
+  border: var(--glass-stroke);
+  border-radius: var(--radius-tile);
 }
 
-.custom-shortcut-placeholder:hover {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0.03) 100%);
+/* Compact pills keep CDK's default placeholder (a copy of the pill), so the row keeps its real width. */
+.shortcuts-compact .cdk-drag-placeholder {
+  opacity: 0.35;
 }
 
-/* VIDEO MANAGEMENT UI STYLES */
-.glass-button {
-  background: var(--glass-bg-light);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  backdrop-filter: var(--glass-blur-sm);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Corner controls */
+.settings-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: var(--radius-pill);
+  font: 500 var(--text-sm) var(--font);
+  cursor: pointer;
 }
 
-.glass-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.glass-panel {
-  background: rgba(10, 10, 10, 0.45);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border-light);
-  border-top: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-left: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: var(--glass-shadow-lg);
-}
-
-.video-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.video-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.video-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.video-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.main-video {
-  object-fit: cover;
+.settings-trigger mat-icon {
+  width: 20px;
+  height: 20px;
 }
 
 ::ng-deep .mat-mdc-menu-content {
