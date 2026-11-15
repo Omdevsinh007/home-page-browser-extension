@@ -1,28 +1,37 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { Group, Shortcut } from '../../models/shortcut';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+import { ChangeDetectionStrategy, Component, inject, input, output, viewChild } from '@angular/core';
+import { MatRippleModule } from '@angular/material/core';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { ShortcutTile } from '../../core/model';
+import { LinkOpenerService } from '../../services/link-opener.service';
+import { ShortcutStyle } from '../../services/ui-prefs.service';
+import { Favicon } from '../favicon/favicon';
 
+/** A shortcut on the main page, as a tile or a compact pill. */
 @Component({
   selector: 'app-link',
-  imports: [MatButtonModule, MatMenuModule],
+  imports: [Favicon, MatIcon, MatMenuModule, MatRippleModule],
   templateUrl: './link.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './link.css'
 })
 export class Link {
-  quickLink = input<Shortcut | Group>();
-  index = input<number>();
-  removeShortcut = output<string>();
-  editShortcut = output<Shortcut>();
-  editIndex = output<number>();
+  private opener = inject(LinkOpenerService);
+  private menu = viewChild.required(MatMenuTrigger);
 
-  edit() {
-    this.editShortcut.emit(this.quickLink() as Shortcut);
-    this.editIndex.emit(this.index()!);
+  quickLink = input.required<ShortcutTile>();
+  variant = input<ShortcutStyle>('tiles');
+  removeShortcut = output<void>();
+  editShortcut = output<void>();
+
+  open(event: MouseEvent): void {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault();
+    void this.opener.open(this.quickLink());
   }
 
-  remove() {
-    this.removeShortcut.emit(this.quickLink()!.id);
+  /** Right-click, the Menu key and Shift+F10 all arrive here as contextmenu: show the app menu, not the browser one. */
+  openMenu(event: Event): void {
+    event.preventDefault();
+    this.menu().openMenu();
   }
 }

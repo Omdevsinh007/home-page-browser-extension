@@ -1,12 +1,13 @@
 {
   "name": "home-page-extension",
-  "version": "2.6.0",
+  "version": "3.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "check:styles": "node scripts/check-styles.mjs"
   },
   "private": true,
   "dependencies": {
@@ -20,7 +21,6 @@
     "@angular/platform-browser": "^22.0.1",
     "@angular/router": "^22.0.1",
     "@tailwindcss/postcss": "^4.1.11",
-    "color-decoder": "^1.1.1",
     "postcss": "^8.5.6",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.11",
@@ -31,14 +31,8 @@
     "@angular/cli": "^22.0.1",
     "@angular/compiler-cli": "^22.0.1",
     "@types/chrome": "^0.1.0",
-    "@types/jasmine": "~5.1.0",
-    "istanbul-lib-instrument": "^6.0.3",
-    "jasmine-core": "~5.7.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
+    "fake-indexeddb": "6.2.6",
+    "jsdom": "^31.0.0",
     "postcss": "^8.5.3",
     "typescript": "~6.0.3",
     "vitest": "^4.0.8"

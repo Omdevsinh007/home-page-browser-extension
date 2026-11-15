@@ -1,0 +1,104 @@
+<section
+  class="section-column flex h-full flex-col"
+  [style.--section-accent]="section().color ? 'var(--' + section().color + ')' : null"
+  [attr.aria-label]="section().name"
+>
+  <header class="section-header flex items-center gap-1 px-3 pt-3 pb-2">
+    <span class="drag-handle flex cursor-grab items-center text-[color:var(--text-faint)] hover:text-[color:var(--text)]" cdkDragHandle aria-hidden="true">
+      <mat-icon class="!text-lg !size-[18px]" svgIcon="drag_indicator" />
+    </span>
+    <button
+      type="button"
+      class="flex min-w-0 items-center gap-2 rounded-md px-1 text-left text-[color:var(--text)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]"
+      [attr.aria-expanded]="!section().collapsed"
+      [attr.aria-label]="(section().collapsed ? 'Expand ' : 'Collapse ') + section().name"
+      (click)="toggleCollapsed()"
+    >
+      <span class="accent-dot size-2 shrink-0 rounded-full"></span>
+      <span class="truncate text-xs font-semibold uppercase tracking-wider" data-testid="section-name">{{ section().name }}</span>
+      <span class="rounded-md bg-[color:var(--glass-fill)] px-1.5 text-xs text-[color:var(--text-dim)]" data-testid="section-count">{{ section().links.length }}</span>
+    </button>
+
+    <span class="ml-auto flex items-center">
+      <button
+        type="button"
+        class="icon-btn"
+        [attr.aria-label]="'Sort ' + section().name + ': ' + sortLabels[section().sort]"
+        [matMenuTriggerFor]="sortMenu"
+      >
+        <mat-icon class="!text-lg !size-[18px]" svgIcon="sort" />
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
+        [attr.aria-label]="'Open all links in ' + section().name"
+        [disabled]="section().links.length === 0"
+        (click)="openAll()"
+      >
+        <mat-icon class="!text-lg !size-[18px]" svgIcon="open_in_new" />
+      </button>
+      <button type="button" class="icon-btn" [attr.aria-label]="'Section options for ' + section().name" [matMenuTriggerFor]="sectionMenu">
+        <mat-icon class="!text-lg !size-[18px]" svgIcon="more_vert" />
+      </button>
+    </span>
+  </header>
+
+  @if (!isManual()) {
+    <p class="px-3 pb-1 text-xs text-[color:var(--text-dim)]">Sorted by {{ sortLabels[section().sort] }}</p>
+  }
+
+  @if (!section().collapsed) {
+    <div
+      class="link-list custom-scroll flex min-h-12 flex-1 flex-col gap-1 overflow-y-auto px-2 pb-2"
+      cdkDropList
+      [cdkDropListData]="section().id"
+      [cdkDropListSortingDisabled]="!isManual()"
+      (cdkDropListDropped)="drop($event)"
+    >
+      @for (link of displayed(); track link.id) {
+        <app-link-row cdkDrag [cdkDragData]="link.id" [link]="link" (edit)="editLink(link)" (remove)="removeLink(link)">
+          <div class="row-placeholder" *cdkDragPlaceholder></div>
+        </app-link-row>
+      } @empty {
+        <p class="px-2 py-3 text-center text-xs text-[color:var(--text-faint)]">Drop links here</p>
+      }
+    </div>
+    <button
+      type="button"
+      class="mx-2 mb-2 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs text-[color:var(--text-dim)] hover:bg-[color:var(--glass-fill)] hover:text-[color:var(--text)] focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] outline-none"
+      (click)="addLink()"
+    >
+      <mat-icon class="!text-base !size-4" svgIcon="add" /> Add link
+    </button>
+  }
+</section>
+
+<mat-menu #sortMenu="matMenu" class="glass-menu">
+  @for (mode of sortModes; track mode) {
+    <button mat-menu-item (click)="setSort(mode)" [attr.aria-checked]="section().sort === mode" role="menuitemradio">
+      @if (section().sort === mode) {
+        <mat-icon class="!text-[color:var(--text)]" svgIcon="check" />
+      } @else {
+        <span class="inline-block size-6" aria-hidden="true"></span>
+      }
+      <span>{{ sortLabels[mode] }}</span>
+    </button>
+  }
+</mat-menu>
+
+<mat-menu #sectionMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="rename()">Rename</button>
+  <button mat-menu-item [matMenuTriggerFor]="colorMenu">Colour</button>
+  <button mat-menu-item (click)="toggleCollapsed()">{{ section().collapsed ? 'Expand' : 'Collapse' }}</button>
+  <button mat-menu-item class="danger" [disabled]="!canDelete()" (click)="remove()">Delete section</button>
+</mat-menu>
+
+<mat-menu #colorMenu="matMenu" class="glass-menu">
+  <button mat-menu-item (click)="setColor(undefined)">None</button>
+  @for (accent of accents; track accent; let i = $index) {
+    <button mat-menu-item (click)="setColor(accent)">
+      <span class="mr-2 inline-block size-3 rounded-full align-middle" [style.background]="'var(--' + accent + ')'"></span>
+      Colour {{ i + 1 }}
+    </button>
+  }
+</mat-menu>
