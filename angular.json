@@ -28,7 +28,8 @@
             "assets": [
               "src/public",
               "src/assets",
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/boot.js"
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
@@ -40,8 +41,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "5MB",
-                  "maximumError": "5MB"
+                  "maximumWarning": "525kB",
+                  "maximumError": "575kB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -90,7 +91,8 @@
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "buildTarget": ":build:testing",
-            "runner": "vitest"
+            "runner": "vitest",
+            "setupFiles": ["src/app/testing/test-setup.ts"]
           }
         }
       }

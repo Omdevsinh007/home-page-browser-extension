@@ -5,6 +5,7 @@ import { stableHash } from '../core/hash';
 import { GroupTile, TopItem } from '../core/model';
 import { FakeStorage } from '../testing/fake-storage';
 import { KEYS, LinksStore } from './links-store';
+import { RENDER_SNAPSHOT_KEY, writeSnapshot } from '../core/render-snapshot';
 import { KeyValueStorage } from './storage.service';
 
 function setup(initial: Record<string, unknown>) {
@@ -237,5 +238,72 @@ describe('LinksStore cross-tab changes', () => {
     fake.data[KEYS.v1] = { version: 1, data: mirror };
     fake.emitChange([KEYS.v2]);
     await vi.waitFor(() => expect(store.items().map((i) => i.id)).toEqual(['remote']));
+  });
+});
+
+describe('LinksStore render snapshot', () => {
+  const two: TopItem[] = [
+    { id: 'a', type: 'Shortcut', name: 'A', url: 'https://a.example', position: 0 },
+    { id: 'b', type: 'Shortcut', name: 'B', url: 'https://b.example', position: 1 },
+  ];
+  const one: TopItem[] = [{ id: 'c', type: 'Shortcut', name: 'C', url: 'https://c.example', position: 0 }];
+  const snapshot = () => JSON.parse(localStorage.getItem(RENDER_SNAPSHOT_KEY) ?? 'null');
+
+  async function stored(items: TopItem[]) {
+    const first = setup({});
+    await first.store.load();
+    await first.store.save(items);
+    const data = structuredClone(first.fake.data);
+    TestBed.resetTestingModule();
+    localStorage.clear();
+    return data;
+  }
+
+  it('snapshot items show before load resolves', () => {
+    writeSnapshot({ items: two });
+    const { store } = setup({});
+    expect(store.items().length).toBe(2);
+    expect(store.status()).toBe('loading');
+    expect(store.editable()).toBe(false);
+  });
+
+  it('load replaces snapshot items with stored items', async () => {
+    const data = await stored(one);
+    writeSnapshot({ items: two });
+    const { store } = setup(data);
+    await store.load();
+    expect(store.items().map((i) => i.id)).toEqual(['c']);
+    expect(store.editable()).toBe(true);
+  });
+
+  it('update while loading is rejected and writes nothing', async () => {
+    writeSnapshot({ items: two });
+    const { store, fake } = setup({});
+    await expect(store.update((items) => items.slice(1))).rejects.toThrow('Links are read-only');
+    expect(fake.setCalls.length).toBe(0);
+  });
+
+  it('snapshot written after ready load and after update', async () => {
+    const data = await stored(one);
+    const { store } = setup(data);
+    await store.load();
+    expect(snapshot().items.map((i: TopItem) => i.id)).toEqual(['c']);
+    await store.update((items) => [...items, two[0]]);
+    expect(snapshot().items.map((i: TopItem) => i.id)).toEqual(['c', 'a']);
+  });
+
+  it('corrupt load removes the snapshot', async () => {
+    writeSnapshot({ items: two });
+    const { store } = setup({ [KEYS.v2]: { version: 2, data: 'garbage', mirrorHash: 1 } });
+    await store.load();
+    expect(store.status()).toBe('corrupt');
+    expect(localStorage.getItem(RENDER_SNAPSHOT_KEY)).toBeNull();
+  });
+
+  it('snapshot never goes to KeyValueStorage', async () => {
+    const { store, fake } = setup({});
+    await store.load();
+    await store.save(two);
+    expect(fake.setCalls.some((c) => RENDER_SNAPSHOT_KEY in c)).toBe(false);
   });
 });

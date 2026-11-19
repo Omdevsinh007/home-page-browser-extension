@@ -1,14 +1,41 @@
 <div class="flex flex-col gap-4 p-5 text-[color:var(--text)]">
   <div class="flex items-center justify-between border-b border-[color:var(--glass-stroke-color)] pb-3">
-    <h2 id="background-dialog-title" class="flex items-center gap-2 text-lg font-medium">
-      <mat-icon aria-hidden="true" svgIcon="wallpaper" /> Backgrounds
-    </h2>
+    <div class="flex items-center gap-1">
+      <button type="button" (click)="back()" aria-label="Back to Settings"
+        class="-ml-2 flex size-10 items-center justify-center rounded-full outline-none hover:bg-[color:var(--glass-fill)] focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]">
+        <mat-icon svgIcon="arrow_back" />
+      </button>
+      <h2 id="background-dialog-title" class="flex items-center gap-2 text-lg font-medium">Backgrounds</h2>
+    </div>
     <button type="button" (click)="close()" aria-label="Close"
       class="flex size-10 items-center justify-center rounded-full outline-none hover:bg-[color:var(--glass-fill)] focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]">
       <mat-icon svgIcon="close" />
     </button>
   </div>
 
+  <div class="flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-wider text-[color:var(--text-dim)]" id="builtin-label">Built-in</span>
+    <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Built-in wallpapers">
+      @for (w of builtIns; track w.id) {
+        <button type="button" role="radio" [attr.aria-label]="w.name" [attr.aria-checked]="bg.shown() === w.id" (click)="selectBuiltIn(w.id)"
+          class="builtin flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]"
+          [class.builtin-active]="bg.shown() === w.id">
+          <span class="wallpaper-swatch block h-12 w-full rounded-lg" [attr.data-wallpaper]="w.id" aria-hidden="true"></span>
+          <span aria-hidden="true">{{ w.name }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between gap-3">
+    <span class="text-sm" id="motion-label">Motion</span>
+    <button type="button" role="switch" aria-label="Motion" [attr.aria-checked]="bg.motion()" (click)="setMotion(!bg.motion())"
+      class="motion-switch outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]" [class.motion-on]="bg.motion()">
+      <span class="motion-knob" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <span class="text-xs font-semibold uppercase tracking-wider text-[color:var(--text-dim)]">Your backgrounds</span>
   <ul class="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1" role="radiogroup" aria-label="Choose a background">
     @for (item of bg.list(); track item.id) {
       <li class="flex flex-col gap-2 rounded-xl border p-3 transition-colors"
@@ -57,7 +84,7 @@
         }
       </li>
     } @empty {
-      <li class="py-4 text-center text-sm text-[color:var(--text-dim)]">No backgrounds yet.</li>
+      <li class="py-2 text-center text-sm text-[color:var(--text-dim)]">No uploads yet.</li>
     }
   </ul>
 
@@ -69,7 +96,7 @@
       <input type="file" accept="video/*,image/*" class="sr-only" [disabled]="bg.list().length >= max" (change)="upload($event)" />
     </label>
     <p class="mt-3 text-xs leading-tight text-[color:var(--text-dim)]">
-      Up to {{ max }} backgrounds. One must stay active. Stored locally in this browser.
+      Up to {{ max }} uploads. Stored locally in this browser.
     </p>
   </div>
 </div>

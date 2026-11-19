@@ -29,6 +29,13 @@ function dropEvent(from: string, to: string, linkId: string, previousIndex: numb
   } as unknown as CdkDragDrop<string, string, string>;
 }
 
+
+/** Every item in a menu starts its label at the same x: all have a leading icon/swatch, or none do. */
+function expectAlignedLeads(items: HTMLElement[]) {
+  const leads = items.map((i) => !!i.querySelector(':scope > mat-icon, :scope > .popover-lead'));
+  expect(leads.every(Boolean) || leads.every((l) => !l)).toBe(true);
+}
+
 describe('SectionColumn', () => {
   it('renders the header with name and link count, rows in manual order', async () => {
     const { el } = await render('git');
@@ -102,5 +109,90 @@ describe('SectionColumn', () => {
   it('Open all button has an accessible name', async () => {
     const { el } = await render('git');
     expect(el.querySelector('button[aria-label="Open all links in Git"]')).not.toBeNull();
+  });
+
+  describe('menus', () => {
+    const menus = () => [...document.querySelectorAll<HTMLElement>('[role="menu"]')];
+    const itemsOf = (menu: HTMLElement) => [...menu.querySelectorAll<HTMLElement>(':scope [role^="menuitem"]')].filter((i) => i.closest('[role="menu"]') === menu);
+    async function openMenu(r: Awaited<ReturnType<typeof render>>, label: string) {
+      (r.el.querySelector(`button[aria-label^="${label}"]`) as HTMLElement).click();
+      r.fixture.detectChanges();
+      await r.fixture.whenStable();
+      r.fixture.detectChanges();
+    }
+
+    it('choosing a sort mode marks it aria-checked', async () => {
+      const r = await render('git');
+      await openMenu(r, 'Sort Git');
+      const az = itemsOf(menus()[0]).find((i) => i.textContent!.trim() === 'A–Z')!;
+      expect(az.getAttribute('role')).toBe('menuitemradio');
+      az.click();
+      await r.fixture.whenStable();
+      r.sync();
+      expect(r.group().sections[0].sort).toBe('az');
+      await openMenu(r, 'Sort Git');
+      expect(itemsOf(menus()[0]).find((i) => i.textContent!.trim() === 'A–Z')!.getAttribute('aria-checked')).toBe('true');
+    });
+
+    it('Colour opens a submenu with None + 8 colours', async () => {
+      const r = await render('git');
+      await openMenu(r, 'Section options for Git');
+      const colour = itemsOf(menus()[0]).find((i) => i.textContent!.trim().startsWith('Colour'))!;
+      expect(['true', 'menu']).toContain(colour.getAttribute('aria-haspopup'));
+      colour.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      colour.click();
+      r.fixture.detectChanges();
+      await r.fixture.whenStable();
+      r.fixture.detectChanges();
+      const sub = menus().find((m) => m !== menus()[0])!;
+      expect(itemsOf(sub).length).toBe(9);
+      expectAlignedLeads(itemsOf(sub));
+    });
+
+    it('sort and options menus drop from their button, right edges aligned', async () => {
+      const r = await render('git');
+      await openMenu(r, 'Sort Git');
+      expect(menus()[0].closest('.cdk-overlay-pane')!.classList.contains('placement-below-end')).toBe(true);
+      menus()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      r.fixture.detectChanges();
+      await r.fixture.whenStable();
+      await openMenu(r, 'Section options for Git');
+      expect(menus()[0].closest('.cdk-overlay-pane')!.classList.contains('placement-below-end')).toBe(true);
+    });
+
+    it('choosing a colour in the Colour submenu saves it on the section, and None clears it', async () => {
+      const r = await render('git');
+      const pick = async (label: string) => {
+        await openMenu(r, 'Section options for Git');
+        const colour = itemsOf(menus()[0]).find((i) => i.textContent!.trim().startsWith('Colour'))!;
+        colour.click();
+        r.fixture.detectChanges();
+        await r.fixture.whenStable();
+        r.fixture.detectChanges();
+        const sub = menus().find((m) => m !== menus()[0])!;
+        itemsOf(sub).find((i) => i.textContent!.trim() === label)!.click();
+        r.fixture.detectChanges();
+        await r.fixture.whenStable();
+        r.sync();
+      };
+      await pick('Colour 2');
+      expect(r.group().sections[0].color).toBe('accent-2');
+      await pick('None');
+      expect(r.group().sections[0].color).toBeUndefined();
+    });
+
+    it('Delete section is disabled when it is the only section', async () => {
+      const h = await storeHarness();
+      const fixture = TestBed.createComponent(SectionColumn);
+      fixture.componentRef.setInput('group', h.group('g2'));
+      fixture.componentRef.setInput('section', h.group('g2').sections[0]);
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('button[aria-label^="Section options for"]') as HTMLElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const del = itemsOf(menus()[0]).find((i) => i.textContent!.trim() === 'Delete section')!;
+      expect(del.getAttribute('aria-disabled')).toBe('true');
+    });
   });
 });

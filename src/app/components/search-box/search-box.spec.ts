@@ -103,4 +103,26 @@ describe('SearchBox', () => {
     type('docs');
     expect(input.getAttribute('aria-expanded')).toBe('true');
   });
+
+  it('marks matched letters in result names', async () => {
+    const { el, type } = await render();
+    type('ma');
+    const first = el.querySelector('[role="option"]')!;
+    expect(first.querySelector('.hit')!.textContent).toBe('Ma');
+    expect(first.textContent).toContain('Mail');
+  });
+
+  it('mouseenter without mousemove does not change the active row', async () => {
+    const { el, type, input, key, fixture } = await render();
+    type('example');
+    key(input, 'ArrowDown');
+    const options = () => [...el.querySelectorAll<HTMLElement>('[role="option"]')];
+    expect(options()[1].getAttribute('aria-selected')).toBe('true');
+    options()[0].dispatchEvent(new MouseEvent('mouseenter'));
+    fixture.detectChanges();
+    expect(options()[1].getAttribute('aria-selected')).toBe('true');
+    options()[0].dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    fixture.detectChanges();
+    expect(options()[0].getAttribute('aria-selected')).toBe('true');
+  });
 });

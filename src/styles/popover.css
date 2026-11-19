@@ -1,0 +1,121 @@
+/*
+ * Popover menus (@angular/aria menu in a CDK connected overlay). Positions live in core/popover.ts;
+ * each position adds a placement-* class to the overlay pane, which sets where the panel grows from.
+ */
+.popover-menu {
+  min-width: 168px;
+  padding: 4px;
+  border-radius: var(--radius-popover);
+  background: var(--glass-fill-dark);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  color: var(--text);
+  font: 400 var(--text-sm) var(--font);
+  outline: none;
+  transform-origin: top center;
+  animation: popover-in 120ms ease-out;
+}
+
+/* A submenu's overlay stays attached while its parent is open; hide it until the submenu itself opens. */
+.popover-menu[data-visible='false'] {
+  display: none;
+}
+
+.placement-above .popover-menu {
+  transform-origin: bottom center;
+}
+
+.placement-below-end .popover-menu {
+  transform-origin: top right;
+}
+
+.placement-above-end .popover-menu {
+  transform-origin: bottom right;
+}
+
+.placement-below-start .popover-menu {
+  transform-origin: top left;
+}
+
+.placement-above-start .popover-menu {
+  transform-origin: bottom left;
+}
+
+.placement-end .popover-menu {
+  transform-origin: left top;
+}
+
+.placement-start .popover-menu {
+  transform-origin: right top;
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popover-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover-menu {
+    animation-name: popover-fade-in;
+  }
+}
+
+.popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-menu-item);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+/*
+ * Highlight on hover, or on keyboard focus only. Opening a menu with the mouse focuses its first item too
+ * (data-active), but that focus is not :focus-visible, so the item must not look pre-selected.
+ */
+.popover-item:hover:not([aria-disabled='true']),
+.popover-item:focus-visible:not([aria-disabled='true']) {
+  background: var(--glass-fill-strong);
+}
+
+.popover-item[aria-disabled='true'] {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.popover-item.danger:not([aria-disabled='true']) {
+  color: var(--danger);
+}
+
+.popover-item mat-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-dim);
+}
+
+.popover-item .popover-chevron {
+  margin-left: auto;
+}

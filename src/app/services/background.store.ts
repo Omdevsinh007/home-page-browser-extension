@@ -1,10 +1,14 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { KeyValueStorage } from './storage.service';
+import { readSnapshot, writeSnapshot } from '../core/render-snapshot';
+import { BuiltInId, DEFAULT_WALLPAPER, isBuiltIn } from '../core/wallpapers';
 
 /** v2.x stored backgrounds as data URLs under this chrome.storage key. Left untouched (v2.6.0 can still read it). */
 export const LEGACY_KEY = 'backgroundVideos';
 export const MIGRATED_FLAG = 'backgrounds_idb_migrated';
 export const MAX_BACKGROUNDS = 3;
+/** The built-in wallpaper choice, `{ builtIn: BuiltInId; motion: boolean }`. Kept apart from links data, so exports never carry it. */
+export const WALLPAPER_KEY = 'wallpaper';
 
 const DB_NAME = 'custom-homepage';
 const STORE = 'backgrounds';
@@ -83,7 +87,8 @@ const meta = ({ blob: _blob, ...rest }: BackgroundRecord): BackgroundMeta => res
 
 /**
  * Backgrounds as Blobs in IndexedDB (no chrome.storage quota, no base64 bloat). Settings changes are previewed
- * in memory and written once on commit, instead of on every slider tick.
+ * in memory and written once on commit, instead of on every slider tick. With no upload active, the chosen
+ * built-in wallpaper shows.
  */
 @Injectable({ providedIn: 'root' })
 export class BackgroundStore {
@@ -96,10 +101,23 @@ export class BackgroundStore {
   readonly active = this._active.asReadonly();
   readonly count = computed(() => this._list().length);
 
+  private readonly _builtIn = signal<BuiltInId>(this.initialBuiltIn());
+  /** The built-in wallpaper used whenever no upload is active. */
+  readonly builtIn = this._builtIn.asReadonly();
+  /** What the page shows: the chosen built-in, or 'upload' while one of the user's files is active. */
+  readonly shown = computed<BuiltInId | 'upload'>(() => (this._active() ? 'upload' : this._builtIn()));
+
+  private readonly _motion = signal<boolean>(readSnapshot()?.motion ?? true);
+  /** Whether the built-in wallpaper drifts (off also under the OS reduced-motion setting, in CSS). */
+  readonly motion = this._motion.asReadonly();
+
   async load(): Promise<void> {
     await this.importLegacyOnce();
+    const stored = (await this.storage.getMany([WALLPAPER_KEY]))[WALLPAPER_KEY];
+    const choice = stored && typeof stored === 'object' ? (stored as { builtIn?: unknown; motion?: unknown }) : {};
+    this._builtIn.set(isBuiltIn(choice.builtIn) ? choice.builtIn : DEFAULT_WALLPAPER);
+    this._motion.set(choice.motion !== false);
     this.records = await readAllRecords();
-    if (this.records.length && !this.records.some((r) => r.isActive)) this.records[0] = { ...this.records[0], isActive: true };
     this.publish();
   }
 
@@ -122,15 +140,31 @@ export class BackgroundStore {
     this.publish();
   }
 
+  /** Deleting the active upload falls back to the built-in wallpaper. */
   async remove(id: string): Promise<void> {
-    if (this.records.length <= 1) throw new Error('At least one background must remain.');
-    const removed = this.records.find((r) => r.id === id);
-    let next = this.records.filter((r) => r.id !== id);
-    if (removed?.isActive) next = next.map((r, i) => ({ ...r, isActive: i === 0 }));
     await tx('readwrite', (s) => void s.delete(id));
-    await putAll(next);
-    this.records = next;
+    this.records = this.records.filter((r) => r.id !== id);
     this.publish();
+  }
+
+  /** Shows a built-in wallpaper: every upload becomes inactive (they stay in the list). */
+  async setBuiltIn(id: BuiltInId): Promise<void> {
+    const next = this.records.map((r) => ({ ...r, isActive: false }));
+    await Promise.all([putAll(next), this.saveChoice(id, this._motion())]);
+    this.records = next;
+    this._builtIn.set(id);
+    this.publish();
+  }
+
+  /** Turns the wallpaper drift on or off. */
+  async setMotion(on: boolean): Promise<void> {
+    await this.saveChoice(this._builtIn(), on);
+    this._motion.set(on);
+    writeSnapshot({ motion: on });
+  }
+
+  private saveChoice(builtIn: BuiltInId, motion: boolean): Promise<void> {
+    return this.storage.setMany({ [WALLPAPER_KEY]: { builtIn, motion } });
   }
 
   async setActive(id: string): Promise<void> {
@@ -168,6 +202,12 @@ export class BackgroundStore {
     }
     if (previous) URL.revokeObjectURL(previous.objectUrl);
     this._active.set(active ? { meta: meta(active), objectUrl: URL.createObjectURL(active.blob) } : null);
+    writeSnapshot({ wallpaper: this.shown(), motion: this._motion() });
+  }
+
+  private initialBuiltIn(): BuiltInId {
+    const last = readSnapshot()?.wallpaper;
+    return isBuiltIn(last) ? last : DEFAULT_WALLPAPER;
   }
 
   private async importLegacyOnce(): Promise<void> {

@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild } from '@angular/core';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
 import { MatIcon } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
+import { POPOVER_VIEWPORT_MARGIN, TILE_MENU_POSITIONS } from '../../core/popover';
 import { LinkItem } from '../../core/model';
 import { hostnameOf } from '../../core/url';
 import { Favicon } from '../favicon/favicon';
@@ -9,7 +11,7 @@ import { LinkOpenerService } from '../../services/link-opener.service';
 /** Compact link row inside a section column. Plain left click opens via the opener (counts the use). */
 @Component({
   selector: 'app-link-row',
-  imports: [MatMenuModule, MatIcon, Favicon],
+  imports: [OverlayModule, Menu, MenuContent, MenuItem, MenuTrigger, MatIcon, Favicon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[attr.data-id]': 'link().id', class: 'block' },
   template: `
@@ -31,17 +33,22 @@ import { LinkOpenerService } from '../../services/link-opener.service';
       </a>
       <button
         type="button"
-        class="mr-1 flex size-7 shrink-0 items-center justify-center rounded-full text-[color:var(--text-dim)] opacity-0 hover:bg-[color:var(--glass-fill)] hover:text-[color:var(--text)] group-hover/row:opacity-100 focus-visible:opacity-100"
+        class="mr-[5px] flex size-7 shrink-0 items-center justify-center rounded-full text-[color:var(--text-dim)] opacity-0 hover:bg-[color:var(--glass-fill)] hover:text-[color:var(--text)] group-hover/row:opacity-100 focus-visible:opacity-100"
         [attr.aria-label]="'Options for ' + link().name"
-        [matMenuTriggerFor]="menu"
+        data-menu-origin #origin ngMenuTrigger #trigger="ngMenuTrigger" [menu]="menu()"
       >
         <mat-icon class="!size-[18px]" svgIcon="more_horiz" />
       </button>
     </div>
-    <mat-menu #menu="matMenu" class="glass-menu">
-      <button mat-menu-item (click)="edit.emit()">Edit link</button>
-      <button mat-menu-item class="danger" (click)="remove.emit()">Delete</button>
-    </mat-menu>
+    <ng-template [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="trigger.expanded()"
+      [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+      <div ngMenu #rowMenu="ngMenu" class="popover-menu" (itemSelected)="onSelected($event)">
+        <ng-template ngMenuContent>
+          <div ngMenuItem class="popover-item" value="edit">Edit link</div>
+          <div ngMenuItem class="popover-item danger" value="delete">Delete</div>
+        </ng-template>
+      </div>
+    </ng-template>
   `,
 })
 export class LinkRow {
@@ -49,6 +56,16 @@ export class LinkRow {
   readonly link = input.required<LinkItem>();
   readonly edit = output<void>();
   readonly remove = output<void>();
+
+  readonly menu = viewChild<Menu<string>>('rowMenu');
+  /** Menus drop from their button, right edges aligned (same as the tile menus). */
+  readonly positions = TILE_MENU_POSITIONS;
+  readonly margin = POPOVER_VIEWPORT_MARGIN;
+
+  onSelected(value: string | undefined): void {
+    if (value === 'edit') this.edit.emit();
+    else if (value === 'delete') this.remove.emit();
+  }
 
   readonly host = computed(() => hostnameOf(this.link().url).replace(/^www\./, ''));
 

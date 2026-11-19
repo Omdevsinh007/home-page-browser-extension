@@ -11,6 +11,8 @@
   --glass-fill-faint: rgba(255, 255, 255, 0.08);
   /* Search sits on a darker fill so its placeholder stays readable over bright wallpaper. */
   --glass-fill-search: rgba(30, 30, 36, 0.50);
+  /* Search results sit over tiles, so they need a denser fill than other glass to keep rows legible. */
+  --glass-fill-results: rgba(24, 24, 30, 0.78);
   --glass-filter: blur(30px) saturate(180%);
   --glass-stroke-color: rgba(255, 255, 255, 0.18);
   --glass-stroke: 0.5px solid var(--glass-stroke-color);
@@ -39,6 +41,12 @@
   --radius-column: 16px;
   --radius-row: 10px;
   --radius-pill: 999px;
+  /*
+   * Concentric rule: a shape inset inside another uses radius = outer radius - inset,
+   * so hover fills follow the container's curve. Popover 18 - padding 4 = 14; results 18 - padding 8 = 10.
+   */
+  --radius-menu-item: 14px;
+  --radius-result-row: 10px;
 
   /* Type: 12 / 14 / 16 / 20 px, weights 400 / 500 / 600 */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;

@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { provideAppIcons } from '../../core/icons';
 import { GroupTile } from '../../core/model';
 import { sampleItems } from '../../testing/store-harness';
@@ -9,7 +8,6 @@ const propera = () => sampleItems().find((i) => i.id === 'g') as GroupTile;
 
 describe('GroupLink', () => {
   let fixture: ComponentFixture<GroupLink>;
-  let overlay: HTMLElement;
 
   function create(variant: 'tiles' | 'compact', group: GroupTile = propera()) {
     fixture = TestBed.createComponent(GroupLink);
@@ -21,7 +19,6 @@ describe('GroupLink', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [GroupLink], providers: [provideAppIcons()] }).compileComponents();
-    overlay = TestBed.inject(OverlayContainer).getContainerElement();
   });
 
   it('renders the tile name', () => {
@@ -49,7 +46,7 @@ describe('GroupLink', () => {
     el.querySelector('[data-testid="pill"]')!.dispatchEvent(event);
     fixture.detectChanges();
     expect(event.defaultPrevented).toBe(true);
-    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
+    expect(document.querySelector('[role="menu"]')).toBeTruthy();
   });
 
   it('group menu says Rename and Delete', () => {
@@ -58,7 +55,29 @@ describe('GroupLink', () => {
       new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
     );
     fixture.detectChanges();
-    const items = [...overlay.querySelectorAll('[mat-menu-item]')].map((b) => b.textContent!.trim());
+    const items = [...document.querySelectorAll('[role="menu"] [role^="menuitem"]')].map((b) => b.textContent!.trim());
     expect(items).toEqual(['Rename', 'Delete']);
+  });
+
+  it('choosing Delete in the menu emits removeLink', async () => {
+    const el = create('tiles');
+    const spy = vi.fn();
+    fixture.componentInstance.removeLink.subscribe(spy);
+    (el.querySelector('.shortcut-more') as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const target = [...document.querySelectorAll<HTMLElement>('[role="menu"] [role^="menuitem"]')].find((i) => i.textContent!.trim() === 'Delete')!;
+    target.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+  });
+
+  it('drops the menu from the options button', () => {
+    const el = create('tiles');
+    (el.querySelector('.shortcut-more') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('.shortcut-more')!.hasAttribute('data-menu-origin')).toBe(true);
+    expect(el.querySelector('.shortcut')!.hasAttribute('data-menu-origin')).toBe(false);
   });
 });

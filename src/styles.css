@@ -2,6 +2,17 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
 @import "./styles/shortcuts.css";
+@import "./styles/popover.css";
+@import "./styles/wallpapers.css";
+
+/* Tailwind 4 resets buttons to cursor: default; restore the hand on everything clickable (Tailwind's documented fix). */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='radio']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+}
 
 html,
 body {
@@ -108,37 +119,6 @@ html:root {
 
 .mat-mdc-dialog-container .mat-mdc-unelevated-button.danger {
   --mat-button-filled-container-color: var(--danger-fill);
-}
-
-/* Material menus in the glass material */
-.mat-mdc-menu-panel.glass-menu {
-  background: var(--glass-fill-dark) !important;
-  -webkit-backdrop-filter: var(--glass-filter);
-  backdrop-filter: var(--glass-filter);
-  border: var(--glass-stroke);
-  border-radius: var(--radius-popover) !important;
-  box-shadow: var(--glass-highlight), var(--glass-shadow) !important;
-  padding: 4px;
-  min-width: 160px;
-}
-
-.glass-menu .mat-mdc-menu-item {
-  min-height: 36px;
-  border-radius: var(--radius-row);
-  color: var(--text);
-  --mat-menu-item-label-text-color: var(--text);
-  --mat-menu-item-label-text-font: var(--font);
-  --mat-menu-item-label-text-size: var(--text-sm);
-  --mat-menu-item-icon-color: var(--text-dim);
-}
-
-.glass-menu .mat-mdc-menu-item:hover:not([disabled]) {
-  background: var(--glass-fill-strong);
-}
-
-.glass-menu .mat-mdc-menu-item.danger {
-  --mat-menu-item-label-text-color: var(--danger);
-  color: var(--danger);
 }
 
 /* Snackbars in the glass material */

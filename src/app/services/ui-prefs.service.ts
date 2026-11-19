@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { NotifyService } from './notify.service';
 import { KeyValueStorage } from './storage.service';
+import { readSnapshot, writeSnapshot } from '../core/render-snapshot';
 
 /** Display preferences, kept apart from links data so exports and the v1 mirror never carry them. */
 export const UI_PREFS_KEY = 'uiPrefs';
@@ -17,7 +18,7 @@ const isStyle = (value: unknown): value is ShortcutStyle => value === 'tiles' ||
 export class UiPrefsService {
   private storage = inject(KeyValueStorage);
   private notify = inject(NotifyService);
-  private readonly _shortcutStyle = signal<ShortcutStyle>('tiles');
+  private readonly _shortcutStyle = signal<ShortcutStyle>(readSnapshot()?.style ?? 'tiles');
   /** Increments on every change, so a late failure of an older save never undoes a newer choice. */
   private changeSeq = 0;
   readonly shortcutStyle = this._shortcutStyle.asReadonly();
@@ -32,6 +33,7 @@ export class UiPrefsService {
     }
     const style = raw && typeof raw === 'object' ? (raw as Partial<UiPrefs>).shortcutStyle : undefined;
     this._shortcutStyle.set(isStyle(style) ? style : 'tiles');
+    writeSnapshot({ style: this._shortcutStyle() });
   }
 
   /** Switches at once; if saving fails, switches back and says so. */
@@ -41,6 +43,7 @@ export class UiPrefsService {
     this._shortcutStyle.set(style);
     try {
       await this.storage.setMany({ [UI_PREFS_KEY]: { shortcutStyle: style } satisfies UiPrefs });
+      if (seq === this.changeSeq) writeSnapshot({ style });
     } catch {
       if (seq !== this.changeSeq) return;
       this._shortcutStyle.set(previous);
