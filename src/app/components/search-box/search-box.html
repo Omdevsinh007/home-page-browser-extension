@@ -35,16 +35,16 @@
             role="option"
             [id]="'search-opt-' + option.index"
             [attr.aria-selected]="option.index === activeIndex()"
-            class="option flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-[color:var(--text)]"
+            class="option flex cursor-pointer items-center gap-3 px-3 py-2 text-[color:var(--text)]"
             [class.active]="option.index === activeIndex()"
             (mousedown)="$event.preventDefault()"
-            (mouseenter)="activeIndex.set(option.index)"
+            (mousemove)="onOptionMouseMove(option.index)"
             (click)="onOptionClick($event, option.entry)"
             (auxclick)="onOptionClick($event, option.entry)"
           >
             <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--glass-fill)]"><app-favicon [url]="option.entry.url" [name]="option.entry.name" /></span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-sm">{{ option.entry.name }}</span>
+              <span class="option-name block truncate text-sm">@for (seg of option.name; track $index) {<span [class.hit]="seg.hit">{{ seg.text }}</span>}</span>
               @if (!result().noMatch) {
                 <span class="block truncate text-xs text-[color:var(--text-dim)]">{{ pathOf(option.entry) }}</span>
               }

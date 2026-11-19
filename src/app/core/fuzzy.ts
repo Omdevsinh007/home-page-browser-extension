@@ -53,3 +53,91 @@ export function fuzzyScore(query: string, text: string): number | null {
   }
   return null;
 }
+
+export type MatchRange = [start: number, end: number];
+
+const SEPARATOR = /[\s\-_/.:?=&#|,;]/;
+const COMBINING = /[\u0300-\u036f]/g;
+
+/** Normalised text plus, for each normalised code unit, the original [start, end) it came from. */
+function normalizeWithMap(text: string): { norm: string; from: MatchRange[] } {
+  let norm = '';
+  const from: MatchRange[] = [];
+  let i = 0;
+  for (const ch of text) {
+    const n = ch.normalize('NFD').replace(COMBINING, '').toLowerCase();
+    for (let k = 0; k < n.length; k++) from.push([i, i + ch.length]);
+    norm += n;
+    i += ch.length;
+  }
+  return { norm, from };
+}
+
+function findWordPrefix(norm: string, q: string): number {
+  for (let i = 0; i <= norm.length - q.length; i++) {
+    if ((i === 0 || SEPARATOR.test(norm[i - 1])) && norm.startsWith(q, i)) return i;
+  }
+  return -1;
+}
+
+/** Normalised indexes of q's letters inside one word, or null when the word does not contain q in order. */
+function subsequenceIn(norm: string, q: string): number[] | null {
+  let start = 0;
+  while (start < norm.length) {
+    while (start < norm.length && SEPARATOR.test(norm[start])) start++;
+    let end = start;
+    while (end < norm.length && !SEPARATOR.test(norm[end])) end++;
+    if (end - start >= q.length) {
+      const hits: number[] = [];
+      for (let i = start; i < end && hits.length < q.length; i++) if (norm[i] === q[hits.length]) hits.push(i);
+      if (hits.length === q.length) return hits;
+    }
+    start = end;
+  }
+  return null;
+}
+
+/**
+ * Which letters of `text` a query matched, as half-open ranges in the original text, following the same
+ * tiers as fuzzyScore. A one-typo match marks nothing, since no letters line up.
+ */
+export function matchRanges(query: string, text: string): MatchRange[] {
+  const score = fuzzyScore(query, text);
+  if (score === null || score <= 20) return [];
+  const q = normalize(query);
+  const { norm, from } = normalizeWithMap(text);
+  const toOriginal = (a: number, b: number): MatchRange => [from[a][0], from[b - 1][1]];
+
+  const lead = norm.length - norm.trimStart().length;
+  if (norm.startsWith(q, lead)) return [toOriginal(lead, lead + q.length)];
+  const word = findWordPrefix(norm, q);
+  if (word >= 0) return [toOriginal(word, word + q.length)];
+  const sub = norm.indexOf(q);
+  if (sub >= 0) return [toOriginal(sub, sub + q.length)];
+  const hits = subsequenceIn(norm, q);
+  return hits ? hits.map((h) => toOriginal(h, h + 1)) : [];
+}
+
+export interface TextSegment {
+  text: string;
+  hit: boolean;
+}
+
+/** Splits text into plain and matched segments; adjacent or overlapping ranges merge. */
+export function splitByRanges(text: string, ranges: MatchRange[]): TextSegment[] {
+  const segments: TextSegment[] = [];
+  let at = 0;
+  const push = (end: number, hit: boolean) => {
+    if (end <= at) return;
+    const last = segments.at(-1);
+    if (last && last.hit === hit) last.text += text.slice(at, end);
+    else segments.push({ text: text.slice(at, end), hit });
+    at = end;
+  };
+  for (const [start, end] of [...ranges].sort((a, b) => a[0] - b[0])) {
+    push(start, false);
+    push(end, true);
+  }
+  push(text.length, false);
+  return segments;
+}

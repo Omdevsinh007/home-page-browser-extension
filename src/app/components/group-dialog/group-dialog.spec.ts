@@ -17,6 +17,13 @@ async function render(opts: Parameters<typeof storeHarness>[0] = {}) {
   return { ...h, close, fixture, cmp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
 }
 
+
+/** Every item in a menu starts its label at the same x: all have a leading icon/swatch, or none do. */
+function expectAlignedLeads(items: HTMLElement[]) {
+  const leads = items.map((i) => !!i.querySelector(':scope > mat-icon, :scope > .popover-lead'));
+  expect(leads.every(Boolean) || leads.every((l) => !l)).toBe(true);
+}
+
 describe('GroupDialog', () => {
   it('renders one column per section in position order', async () => {
     const { el } = await render();
@@ -58,5 +65,29 @@ describe('GroupDialog', () => {
     await cmp.deleteGroup();
     expect(store.items().map((i) => i.id)).toEqual(['mail', 'g2']);
     expect(close).toHaveBeenCalled();
+  });
+
+  it('Group options menu lists rename, section moves and delete, and Move runs the move', async () => {
+    const { el, fixture, group } = await render();
+    (el.querySelector('button[aria-label="Group options"]') as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const menu = document.querySelector<HTMLElement>('.popover-menu[role="menu"]')!;
+    const items = [...menu.querySelectorAll<HTMLElement>('[role^="menuitem"]')];
+    expect(items.map((i) => i.textContent!.trim())).toEqual(['Rename group', 'Move “Docs” left', 'Delete group']);
+    expectAlignedLeads(items);
+    items[1].click();
+    await fixture.whenStable();
+    expect(group().sections.map((s) => s.id)).toEqual(['docs', 'git']);
+  });
+
+  it('Group options menu drops from its button, right edges aligned', async () => {
+    const { el, fixture } = await render();
+    (el.querySelector('button[aria-label="Group options"]') as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const menu = document.querySelector<HTMLElement>('.popover-menu[role="menu"]')!;
+    expect(menu.closest('.cdk-overlay-pane')!.classList.contains('placement-below-end')).toBe(true);
   });
 });

@@ -1,14 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
-import { ConfirmData, ConfirmDialog } from '../components/confirm-dialog/confirm-dialog';
+import type { ConfirmData } from '../components/confirm-dialog/confirm-dialog';
+import { DIALOGS, DialogLoader } from './dialog-loader.service';
 
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
-  private dialog = inject(MatDialog);
+  private dialogs = inject(DialogLoader);
 
   async ask(data: ConfirmData): Promise<boolean> {
-    const ref = this.dialog.open(ConfirmDialog, { data, maxWidth: '480px', width: '100%' });
-    return (await firstValueFrom(ref.afterClosed())) === true;
+    return (await this.dialogs.open<boolean>(DIALOGS.confirm, { data, maxWidth: '480px', width: '100%' })) === true;
   }
 }

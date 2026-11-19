@@ -1,8 +1,10 @@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDropList } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
+import { POPOVER_VIEWPORT_MARGIN, SUBMENU_POSITIONS, TILE_MENU_POSITIONS } from '../../core/popover';
 import { firstValueFrom } from 'rxjs';
 import { GroupTile, LinkItem, Section, SortMode } from '../../core/model';
 import { renumber } from '../../core/positions';
@@ -39,7 +41,7 @@ const DIALOG = { maxWidth: '520px', width: '100%' };
 
 @Component({
   selector: 'app-section-column',
-  imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatMenuModule, MatIcon, LinkRow],
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, OverlayModule, Menu, MenuContent, MenuItem, MenuTrigger, MatIcon, LinkRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[attr.data-id]': 'section().id', class: 'block' },
   styleUrl: './section-column.css',
@@ -62,6 +64,27 @@ export class SectionColumn {
   readonly displayed = computed(() => sortLinks(this.section().links, this.section().sort, this.stats.stats()));
   readonly isManual = computed(() => this.section().sort === 'manual');
   readonly canDelete = computed(() => this.group().sections.length > 1);
+
+  /** Menus drop from their button, right edges aligned (same as the tile menus). */
+  readonly positions = TILE_MENU_POSITIONS;
+  readonly submenuPositions = SUBMENU_POSITIONS;
+  readonly margin = POPOVER_VIEWPORT_MARGIN;
+  readonly sortMenu = viewChild<Menu<string>>('sortMenu');
+  readonly optionsMenu = viewChild<Menu<string>>('optionsMenu');
+  readonly colourMenu = viewChild<Menu<string>>('colourMenu');
+
+  onSortSelected(mode: string | undefined): void {
+    if (mode && mode in SORT_LABELS) void this.setSort(mode as SortMode);
+  }
+
+  /** Options menu, including its Colour submenu: @angular/aria reports submenu picks on the root menu. */
+  onOptionSelected(value: string | undefined): void {
+    if (value === 'rename') void this.rename();
+    else if (value === 'collapse') void this.toggleCollapsed();
+    else if (value === 'delete') void this.remove();
+    else if (value === 'colour:none') void this.setColor(undefined);
+    else if (value?.startsWith('colour:') && ACCENTS.includes(value.slice(7))) void this.setColor(value.slice(7));
+  }
 
   async addLink(): Promise<void> {
     const result = await this.ask<LinkDialogResult>(LinkDialog, { title: 'Add link' } satisfies LinkDialogData);

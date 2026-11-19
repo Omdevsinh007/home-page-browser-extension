@@ -18,8 +18,8 @@
     @case ('write-failed') { <p role="alert" class="banner banner-danger glass glass-dark on-glass">Could not save your links. Changes may be lost.</p> }
     }
     <app-search-box class="relative z-30 mb-8 block" />
-    @if (store.status() === 'loading') {
-    <!-- Loading: search only, so the page never flashes a lone add tile. -->
+    @if (store.status() === 'loading' && store.items().length === 0) {
+    <!-- Loading with no snapshot: search only, so the page never flashes a lone add tile. -->
     } @else if (store.status() === 'ready' && store.items().length === 0) {
     <section class="empty glass glass-dark on-glass" aria-labelledby="empty-title">
       <h1 id="empty-title" class="empty-title">Your new tab is empty</h1>
@@ -33,7 +33,7 @@
     } @else {
     @let style = uiPrefs.shortcutStyle();
     <div data-testid="shortcuts" [attr.data-style]="style" class="shortcuts" [class.shortcuts-tiles]="style === 'tiles'"
-      [class.shortcuts-compact]="style === 'compact'" cdkDropListOrientation="mixed" cdkDropList (cdkDropListDropped)="drop($event)">
+      [class.shortcuts-compact]="style === 'compact'" cdkDropListOrientation="mixed" cdkDropList [cdkDropListDisabled]="!store.editable()" (cdkDropListDropped)="drop($event)">
       @for (link of store.items(); track link.id) {
       <div class="shortcut-slot" cdkDrag>
         @if (style === 'tiles') {
@@ -47,11 +47,21 @@
       </div>
       }
       <div class="shortcut-slot">
-        <button type="button" aria-label="Add shortcut or group" [matMenuTriggerFor]="addMenu"
+        <button type="button" aria-label="Add shortcut or group" ngMenuTrigger #addTrigger="ngMenuTrigger" [menu]="addMenu()" [disabled]="!store.editable()" [softDisabled]="false"
           class="glass on-glass shortcut-add" [class.shortcut-tile]="style === 'tiles'" [class.shortcut-pill]="style === 'compact'">
-          <span class="shortcut-icon"><mat-icon svgIcon="add" aria-hidden="true" /></span>
+          <!-- The menu drops from the + icon, like the tile menus drop from their ⋯ button. -->
+          <span class="shortcut-icon" data-menu-origin #addOrigin><mat-icon svgIcon="add" aria-hidden="true" /></span>
           <span class="shortcut-name">Add</span>
         </button>
+        <ng-template [cdkConnectedOverlay]="{ origin: addOrigin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="addTrigger.expanded()"
+          [cdkConnectedOverlayPositions]="popoverPositions" [cdkConnectedOverlayViewportMargin]="popoverMargin" cdkAttachPopoverAsChild>
+          <div ngMenu #addMenu="ngMenu" class="popover-menu" (itemSelected)="onAddSelected($event)">
+            <ng-template ngMenuContent>
+              <div ngMenuItem class="popover-item" value="shortcut"><mat-icon svgIcon="open_in_new" aria-hidden="true" />Add shortcut</div>
+              <div ngMenuItem class="popover-item" value="group"><mat-icon svgIcon="playlist_add" aria-hidden="true" />Add group</div>
+            </ng-template>
+          </div>
+        </ng-template>
       </div>
     </div>
     }
@@ -71,12 +81,9 @@
   [cdkConnectedOverlayPositions]="settingsPositions" cdkConnectedOverlayHasBackdrop
   cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop" (backdropClick)="closeSettings()"
   (detach)="closeSettings()" (overlayKeydown)="onSettingsKeydown($event)">
+  @defer (on immediate) {
   <app-settings-panel (backgrounds)="closeSettings(); openBackgrounds()" (importFile)="closeSettings(); fileInput.click()" (done)="closeSettings()" />
+  }
 </ng-template>
-
-<mat-menu #addMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="addShortcut()">Add shortcut</button>
-  <button mat-menu-item (click)="addGroup()">Add group</button>
-</mat-menu>
 
 <input type="file" #fileInput accept=".json" class="hidden" (change)="onImportData($event)">

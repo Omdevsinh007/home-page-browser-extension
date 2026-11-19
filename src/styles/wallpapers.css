@@ -1,0 +1,165 @@
+/*
+ * Built-in wallpapers (ids in core/wallpapers.ts). The wallpaper is the body background, picked by
+ * html[data-wallpaper]; boot.js sets that attribute from the render snapshot before the first paint, so a
+ * returning user sees their wallpaper at once. With no attribute (first install) Lagoon, the default, shows.
+ * 'upload' means the user's own image/video is active: body stays neutral underneath it.
+ *
+ * Each palette is five soft glows over a deep base, blurred into one smooth mesh, with an edge vignette for depth.
+ * Glows are true circles sized in cqmax (the viewport on the page, the swatch inside the dialog), so a wide
+ * screen never stretches them into ovals.
+ */
+[data-wallpaper='midnight'] {
+  --wp-base: #0b0a22;
+  --wp-a: #2f6bff;
+  --wp-b: #8b3dff;
+  --wp-c: #4a34c4;
+  --wp-d: #1d8fd0;
+  --wp-e: #2b2378;
+}
+
+:root,
+[data-wallpaper='lagoon'] {
+  --wp-base: #04161c;
+  --wp-a: #1a9bb0;
+  --wp-b: #2c4fd0;
+  --wp-c: #0f7d6e;
+  --wp-d: #2bd0c0;
+  --wp-e: #0d3b48;
+}
+
+[data-wallpaper='dusk'] {
+  --wp-base: #170a16;
+  --wp-a: #e0582a;
+  --wp-b: #b81f63;
+  --wp-c: #7a2bb5;
+  --wp-d: #f2a33a;
+  --wp-e: #4a1830;
+}
+
+[data-wallpaper='graphite'] {
+  --wp-base: #0e1014;
+  --wp-a: #4b5568;
+  --wp-b: #3a4152;
+  --wp-c: #2c3340;
+  --wp-d: #6b7891;
+  --wp-e: #252b36;
+}
+
+:root {
+  --wallpaper-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+body {
+  background: var(--wp-base);
+}
+
+/*
+ * Live wallpaper: five soft glows (true circles) that drift slowly. Each glow is its own layer and only its
+ * transform animates, so the GPU moves already-painted layers and the page does no work per frame.
+ * The markup is static in index.html, so it shows on the first frame. Reduced motion: still glows.
+ */
+.wallpaper-live {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wallpaper-live::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 95% at 50% 45%, transparent 50%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.wallpaper-live i {
+  position: absolute;
+  left: calc(var(--x) - var(--r));
+  top: calc(var(--y) - var(--r));
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c), transparent 70%);
+  filter: blur(50px);
+  will-change: transform;
+  animation: var(--drift) ease-in-out infinite alternate;
+}
+
+.wallpaper-live i:nth-child(1) { --x: 78%; --y: 24%; --r: 26vmax; --c: var(--wp-a); --drift: wallpaper-drift-1 20s; }
+.wallpaper-live i:nth-child(2) { --x: 62%; --y: 84%; --r: 28vmax; --c: var(--wp-b); --drift: wallpaper-drift-2 26s; }
+.wallpaper-live i:nth-child(3) { --x: 18%; --y: 38%; --r: 24vmax; --c: var(--wp-c); --drift: wallpaper-drift-3 23s; }
+.wallpaper-live i:nth-child(4) { --x: 10%; --y: 92%; --r: 18vmax; --c: var(--wp-d); --drift: wallpaper-drift-4 18s; }
+.wallpaper-live i:nth-child(5) { --x: 48%; --y: 50%; --r: 20vmax; --c: var(--wp-e); --drift: wallpaper-drift-5 28s; }
+
+@keyframes wallpaper-drift-1 { to { transform: translate(-14vw, 10vh) scale(1.1); } }
+@keyframes wallpaper-drift-2 { to { transform: translate(12vw, -14vh) scale(0.92); } }
+@keyframes wallpaper-drift-3 { to { transform: translate(16vw, 12vh) scale(1.08); } }
+@keyframes wallpaper-drift-4 { to { transform: translate(10vw, -12vh) scale(1.15); } }
+@keyframes wallpaper-drift-5 { to { transform: translate(-10vw, -8vh) scale(1.12); } }
+
+/* Motion switch (Backgrounds dialog) off, or the OS asks for reduced motion: the glows stay still. */
+html[data-motion='off'] .wallpaper-live i {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallpaper-live i {
+    animation: none;
+  }
+}
+
+/* Swatches in the Backgrounds dialog: the same glows, still, sized to the swatch. */
+.wallpaper-swatch::before {
+  content: '';
+  position: absolute;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 95% at 50% 45%, transparent 50%, rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(circle 26cqmax at 78% 26%, var(--wp-a) 0%, transparent 70%),
+    radial-gradient(circle 28cqmax at 62% 82%, var(--wp-b) 0%, transparent 70%),
+    radial-gradient(circle 24cqmax at 20% 40%, var(--wp-c) 0%, transparent 70%),
+    radial-gradient(circle 18cqmax at 12% 90%, var(--wp-d) 0%, transparent 70%),
+    radial-gradient(circle 20cqmax at 48% 50%, var(--wp-e) 0%, transparent 75%),
+    var(--wp-base);
+}
+
+/* Fine grain so the gradients never band. */
+body::after,
+.wallpaper-swatch::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: var(--wallpaper-grain);
+}
+
+html[data-wallpaper='upload'] body {
+  background: var(--page-bg);
+}
+
+html[data-wallpaper='upload'] .wallpaper-live,
+html[data-wallpaper='upload'] body::after {
+  display: none;
+}
+
+.wallpaper-swatch {
+  container-type: size;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--wp-base);
+}
+
+.wallpaper-swatch::before {
+  filter: blur(6px);
+}
+
+.wallpaper-swatch::after {
+  position: absolute;
+}

@@ -24,7 +24,7 @@
         type="button"
         class="icon-btn"
         [attr.aria-label]="'Sort ' + section().name + ': ' + sortLabels[section().sort]"
-        [matMenuTriggerFor]="sortMenu"
+        ngMenuTrigger #sortOrigin #sortTrigger="ngMenuTrigger" [menu]="sortMenu()"
       >
         <mat-icon class="!text-lg !size-[18px]" svgIcon="sort" />
       </button>
@@ -37,7 +37,8 @@
       >
         <mat-icon class="!text-lg !size-[18px]" svgIcon="open_in_new" />
       </button>
-      <button type="button" class="icon-btn" [attr.aria-label]="'Section options for ' + section().name" [matMenuTriggerFor]="sectionMenu">
+      <button type="button" class="icon-btn" [attr.aria-label]="'Section options for ' + section().name"
+        ngMenuTrigger #optionsOrigin #optionsTrigger="ngMenuTrigger" [menu]="optionsMenu()">
         <mat-icon class="!text-lg !size-[18px]" svgIcon="more_vert" />
       </button>
     </span>
@@ -73,32 +74,49 @@
   }
 </section>
 
-<mat-menu #sortMenu="matMenu" class="glass-menu">
-  @for (mode of sortModes; track mode) {
-    <button mat-menu-item (click)="setSort(mode)" [attr.aria-checked]="section().sort === mode" role="menuitemradio">
-      @if (section().sort === mode) {
-        <mat-icon class="!text-[color:var(--text)]" svgIcon="check" />
-      } @else {
-        <span class="inline-block size-6" aria-hidden="true"></span>
+<ng-template [cdkConnectedOverlay]="{ origin: sortOrigin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="sortTrigger.expanded()"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+  <div ngMenu #sortMenu="ngMenu" class="popover-menu" (itemSelected)="onSortSelected($event)">
+    <ng-template ngMenuContent>
+      @for (mode of sortModes; track mode) {
+        <div ngMenuItem class="popover-item" role="menuitemradio" [value]="mode" [attr.aria-checked]="section().sort === mode">
+          @if (section().sort === mode) {
+            <mat-icon svgIcon="check" aria-hidden="true" />
+          } @else {
+            <span class="inline-block size-[18px]" aria-hidden="true"></span>
+          }
+          <span>{{ sortLabels[mode] }}</span>
+        </div>
       }
-      <span>{{ sortLabels[mode] }}</span>
-    </button>
-  }
-</mat-menu>
+    </ng-template>
+  </div>
+</ng-template>
 
-<mat-menu #sectionMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="rename()">Rename</button>
-  <button mat-menu-item [matMenuTriggerFor]="colorMenu">Colour</button>
-  <button mat-menu-item (click)="toggleCollapsed()">{{ section().collapsed ? 'Expand' : 'Collapse' }}</button>
-  <button mat-menu-item class="danger" [disabled]="!canDelete()" (click)="remove()">Delete section</button>
-</mat-menu>
-
-<mat-menu #colorMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="setColor(undefined)">None</button>
-  @for (accent of accents; track accent; let i = $index) {
-    <button mat-menu-item (click)="setColor(accent)">
-      <span class="mr-2 inline-block size-3 rounded-full align-middle" [style.background]="'var(--' + accent + ')'"></span>
-      Colour {{ i + 1 }}
-    </button>
-  }
-</mat-menu>
+<ng-template [cdkConnectedOverlay]="{ origin: optionsOrigin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="optionsTrigger.expanded()"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+  <div ngMenu #optionsMenu="ngMenu" class="popover-menu" (itemSelected)="onOptionSelected($event)">
+    <ng-template ngMenuContent>
+      <div ngMenuItem class="popover-item" value="rename">Rename</div>
+      <div ngMenuItem class="popover-item" value="colour" #colourItem [submenu]="colourMenu()">
+        Colour<span class="popover-chevron" aria-hidden="true">›</span>
+      </div>
+      <ng-template [cdkConnectedOverlay]="{ origin: colourItem, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="optionsMenu.visible()"
+        [cdkConnectedOverlayPositions]="submenuPositions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+        <!-- Submenu picks reach the options menu's itemSelected (aria reports to the root menu), hence the colour: prefix. -->
+        <div ngMenu #colourMenu="ngMenu" class="popover-menu">
+          <ng-template ngMenuContent>
+            <div ngMenuItem class="popover-item" value="colour:none"><span class="popover-lead inline-block size-3 rounded-full border border-[color:var(--text-dim)]" aria-hidden="true"></span>None</div>
+            @for (accent of accents; track accent; let i = $index) {
+              <div ngMenuItem class="popover-item" [value]="'colour:' + accent">
+                <span class="popover-lead inline-block size-3 rounded-full" [style.background]="'var(--' + accent + ')'" aria-hidden="true"></span>
+                Colour {{ i + 1 }}
+              </div>
+            }
+          </ng-template>
+        </div>
+      </ng-template>
+      <div ngMenuItem class="popover-item" value="collapse">{{ section().collapsed ? 'Expand' : 'Collapse' }}</div>
+      <div ngMenuItem class="popover-item danger" value="delete" [disabled]="!canDelete()">Delete section</div>
+    </ng-template>
+  </div>
+</ng-template>

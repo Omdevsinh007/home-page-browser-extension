@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { FakeStorage } from '../testing/fake-storage';
-import { BackgroundStore, LEGACY_KEY, MIGRATED_FLAG, readAllRecords } from './background.store';
+import { BackgroundStore, LEGACY_KEY, MIGRATED_FLAG, WALLPAPER_KEY, readAllRecords } from './background.store';
+import { readSnapshot, writeSnapshot } from '../core/render-snapshot';
 import { KeyValueStorage } from './storage.service';
 
 const PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgo=';
@@ -82,15 +83,24 @@ describe('BackgroundStore', () => {
     expect(store.active()!.meta.name).toBe('a.png');
   });
 
-  it('removing the active background activates another one; the last one cannot be removed', async () => {
+  it('deleting the active upload falls back to the built-in', async () => {
     const { store } = setup();
     await store.load();
     await store.add(file('a.png'));
     await store.add(file('b.png'));
     await store.remove(store.active()!.meta.id);
     expect(store.list().map((b) => b.name)).toEqual(['a.png']);
-    expect(store.active()!.meta.name).toBe('a.png');
-    await expect(store.remove(store.list()[0].id)).rejects.toThrow('At least one background must remain.');
+    expect(store.active()).toBeNull();
+    expect(store.shown()).toBe('lagoon');
+  });
+
+  it('the last upload can be removed', async () => {
+    const { store } = setup();
+    await store.load();
+    await store.add(file('a.png'));
+    await store.remove(store.list()[0].id);
+    expect(store.list()).toEqual([]);
+    expect(store.shown()).toBe('lagoon');
   });
 
   it('uses random UUID ids', async () => {
@@ -98,5 +108,83 @@ describe('BackgroundStore', () => {
     await store.load();
     await store.add(file('a.png'));
     expect(store.list()[0].id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('defaults to lagoon with no uploads', async () => {
+    const { store } = setup();
+    await store.load();
+    expect(store.builtIn()).toBe('lagoon');
+    expect(store.shown()).toBe('lagoon');
+  });
+
+  it('reads the stored built-in; junk falls back to lagoon', async () => {
+    const first = setup({ [WALLPAPER_KEY]: { builtIn: 'dusk' } });
+    await first.store.load();
+    expect(first.store.shown()).toBe('dusk');
+    TestBed.resetTestingModule();
+    for (const junk of ['neon', {}, { builtIn: 'neon' }]) {
+      const { store } = setup({ [WALLPAPER_KEY]: junk });
+      await store.load();
+      expect(store.builtIn()).toBe('lagoon');
+      TestBed.resetTestingModule();
+    }
+  });
+
+  it('keeps an existing active upload', async () => {
+    const legacy = [{ id: '1', name: 'a.png', dataUrl: PNG_DATA_URL, type: 'image', isActive: true }];
+    const { store } = setup({ [LEGACY_KEY]: legacy });
+    await store.load();
+    expect(store.shown()).toBe('upload');
+  });
+
+  it('setBuiltIn deactivates uploads and saves the choice', async () => {
+    const { store, fake } = setup();
+    await store.load();
+    await store.add(file('a.png'));
+    await store.setBuiltIn('lagoon');
+    expect(store.active()).toBeNull();
+    expect(store.shown()).toBe('lagoon');
+    expect((await readAllRecords()).some((r) => r.isActive)).toBe(false);
+    expect(fake.data[WALLPAPER_KEY]).toEqual({ builtIn: 'lagoon', motion: true });
+  });
+
+  it('snapshot follows shown()', async () => {
+    const { store } = setup();
+    await store.load();
+    expect(readSnapshot()?.wallpaper).toBe('lagoon');
+    await store.add(file('a.png'));
+    expect(readSnapshot()?.wallpaper).toBe('upload');
+    await store.setBuiltIn('graphite');
+    expect(readSnapshot()?.wallpaper).toBe('graphite');
+  });
+
+  it('starts from the snapshot built-in before load', () => {
+    writeSnapshot({ wallpaper: 'dusk' });
+    const { store } = setup();
+    expect(store.builtIn()).toBe('dusk');
+  });
+
+  it('motion is on by default and can be turned off and saved', async () => {
+    const { store, fake } = setup({ [WALLPAPER_KEY]: { builtIn: 'dusk' } });
+    await store.load();
+    expect(store.motion()).toBe(true);
+    await store.setMotion(false);
+    expect(store.motion()).toBe(false);
+    expect(fake.data[WALLPAPER_KEY]).toEqual({ builtIn: 'dusk', motion: false });
+    expect(readSnapshot()?.motion).toBe(false);
+  });
+
+  it('reads saved motion; choosing a built-in keeps it', async () => {
+    const { store, fake } = setup({ [WALLPAPER_KEY]: { builtIn: 'dusk', motion: false } });
+    await store.load();
+    expect(store.motion()).toBe(false);
+    await store.setBuiltIn('graphite');
+    expect(fake.data[WALLPAPER_KEY]).toEqual({ builtIn: 'graphite', motion: false });
+  });
+
+  it('junk motion value means on', async () => {
+    const { store } = setup({ [WALLPAPER_KEY]: { builtIn: 'dusk', motion: 'nope' } });
+    await store.load();
+    expect(store.motion()).toBe(true);
   });
 });

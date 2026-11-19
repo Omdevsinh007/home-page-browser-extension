@@ -16,16 +16,22 @@ const meta = (id: string, isActive: boolean): BackgroundMeta => ({
   order: 0,
 });
 
-function setup() {
-  const list = signal([meta('a', true), meta('b', false)]);
+function setup(opts: { uploadActive?: boolean } = {}) {
+  const uploadActive = opts.uploadActive ?? true;
+  const list = signal([meta('a', uploadActive), meta('b', false)]);
   const bg = {
     list,
-    active: signal({ meta: meta('a', true), objectUrl: 'blob:x' }),
+    active: signal(uploadActive ? { meta: meta('a', true), objectUrl: 'blob:x' } : null),
+    builtIn: signal('lagoon'),
+    shown: signal(uploadActive ? 'upload' : 'lagoon'),
+    setBuiltIn: vi.fn(async () => undefined),
+    motion: signal(true),
+    setMotion: vi.fn(async () => undefined),
     preview: vi.fn(),
     commit: vi.fn(async () => undefined),
     setActive: vi.fn(async () => undefined),
     remove: vi.fn(async () => {
-      throw new Error('At least one background must remain.');
+      throw new Error('Could not delete.');
     }),
     add: vi.fn(async () => undefined),
   };
@@ -40,7 +46,7 @@ function setup() {
   });
   const fixture = TestBed.createComponent(BackgroundDialog);
   fixture.detectChanges();
-  return { bg, notify, el: fixture.nativeElement as HTMLElement };
+  return { bg, notify, el: fixture.nativeElement as HTMLElement, ref: TestBed.inject(MatDialogRef) as unknown as { close: ReturnType<typeof vi.fn> } };
 }
 
 describe('BackgroundDialog', () => {
@@ -67,11 +73,51 @@ describe('BackgroundDialog', () => {
     (el.querySelector('button[aria-label="Delete a.png"]') as HTMLButtonElement).click();
     await Promise.resolve();
     await Promise.resolve();
-    expect(notify.error).toHaveBeenCalledWith('At least one background must remain.');
+    expect(notify.error).toHaveBeenCalledWith('Could not delete.');
   });
 
   it('says where the files are stored', () => {
     const { el } = setup();
     expect(el.textContent).toContain('Stored locally in this browser.');
+  });
+
+  const swatches = (el: HTMLElement) => [...el.querySelectorAll<HTMLElement>('[aria-label="Built-in wallpapers"] [role="radio"]')];
+
+  it('shows four built-in swatches as radios', () => {
+    const { el } = setup();
+    expect(swatches(el).map((s) => s.getAttribute('aria-label'))).toEqual(['Midnight', 'Lagoon', 'Dusk', 'Graphite']);
+  });
+
+  it('the chosen built-in is checked when no upload is active', () => {
+    const shown = setup({ uploadActive: false });
+    expect(swatches(shown.el).map((s) => s.getAttribute('aria-checked'))).toEqual(['false', 'true', 'false', 'false']);
+    TestBed.resetTestingModule();
+    const hidden = setup({ uploadActive: true });
+    expect(swatches(hidden.el).every((s) => s.getAttribute('aria-checked') === 'false')).toBe(true);
+  });
+
+  it('clicking a swatch calls setBuiltIn', () => {
+    const { el, bg } = setup();
+    swatches(el)[2].click();
+    expect(bg.setBuiltIn).toHaveBeenCalledWith('dusk');
+  });
+
+  it('no longer says one must stay active', () => {
+    const { el } = setup();
+    expect(el.textContent).not.toContain('One must stay active');
+  });
+
+  it('Back closes the dialog with "back" so Settings opens again', () => {
+    const { el, ref } = setup();
+    (el.querySelector('button[aria-label="Back to Settings"]') as HTMLButtonElement).click();
+    expect(ref.close).toHaveBeenCalledWith('back');
+  });
+
+  it('Motion switch shows the state and turns motion off', () => {
+    const { el, bg } = setup();
+    const sw = el.querySelector('[role="switch"][aria-label="Motion"]') as HTMLButtonElement;
+    expect(sw.getAttribute('aria-checked')).toBe('true');
+    sw.click();
+    expect(bg.setMotion).toHaveBeenCalledWith(false);
   });
 });

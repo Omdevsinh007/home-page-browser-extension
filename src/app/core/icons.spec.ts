@@ -7,7 +7,7 @@ import { ICONS, provideAppIcons } from './icons';
 describe('icons', () => {
   it('defines every icon as an svg', () => {
     const entries = Object.entries(ICONS);
-    expect(entries.length).toBe(20);
+    expect(entries.length).toBe(21);
     for (const [, svg] of entries) {
       expect(svg).toMatch(/^<svg[^>]*viewBox="0 -960 960 960"[^>]*>.*<\/svg>$/s);
       expect(svg).toContain('fill="currentColor"');

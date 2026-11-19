@@ -5,6 +5,7 @@ import { CURRENT_VERSION, detectShape, migrateV1toV2, normalizeV2Items, unwrap }
 import { GroupTile, TopItem, V1Shortcut } from '../core/model';
 import { renumber } from '../core/positions';
 import { reconcile } from '../core/reconcile';
+import { clearSnapshot, readSnapshot, writeSnapshot } from '../core/render-snapshot';
 import { KeyValueStorage } from './storage.service';
 
 export const KEYS = {
@@ -42,8 +43,13 @@ export class LinksStore {
   readonly items = this._items.asReadonly();
   readonly status = this._status.asReadonly();
   readonly groups = computed(() => this._items().filter((i): i is GroupTile => i.type === 'Group'));
+  /** Saving is allowed only once the real data has loaded (not while showing the render snapshot). */
+  readonly editable = computed(() => this._status() === 'ready');
 
   constructor() {
+    const snapshot = readSnapshot()?.items;
+    if (snapshot) this._items.set(snapshot);
+
     const off = this.storage.onChange((keys) => {
       if (keys.includes(KEYS.v2) && this._status() === 'ready') void this.load();
     });
@@ -73,6 +79,7 @@ export class LinksStore {
         if (stableHash(mirrorData) === record.mirrorHash) {
           this._items.set(renumber(data));
           this._status.set('ready');
+          writeSnapshot({ items: this._items() });
           return;
         }
         // v2.6.0 edited the flat mirror: merge its edits back, after backing up v2.
@@ -89,6 +96,7 @@ export class LinksStore {
       case 'empty':
         this._items.set([]);
         this._status.set('ready');
+        writeSnapshot({ items: [] });
         return;
       case 'future':
         return this.readonly(unwrap(mirrorRaw).data);
@@ -157,16 +165,19 @@ export class LinksStore {
     this.writeSeq++;
     await this.storage.setMany({ [KEYS.v2]: record, [KEYS.v1]: { version: 1, data: mirror } });
     this._items.set(items);
+    writeSnapshot({ items });
   }
 
   private readonly(data: unknown): void {
     this._items.set(Array.isArray(data) ? (data as TopItem[]) : []);
     this._status.set('readonly-future');
+    clearSnapshot();
   }
 
   private corrupt(raw: unknown): void {
     this.corruptRaw = raw;
     this._items.set([]);
     this._status.set('corrupt');
+    clearSnapshot();
   }
 }
