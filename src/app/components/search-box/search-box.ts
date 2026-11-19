@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { MatIcon } from '@angular/material/icon';
 import { Favicon } from '../favicon/favicon';
 import { SearchEntry, buildIndex, search } from '../../core/search';
+import { TextSegment, matchRanges, splitByRanges } from '../../core/fuzzy';
 import { LinkOpenerService } from '../../services/link-opener.service';
 import { LinkStatsService } from '../../services/link-stats.service';
 import { LinksStore } from '../../services/links-store';
 
 interface OptionGroup {
   label: string;
-  options: { entry: SearchEntry; index: number }[];
+  options: { entry: SearchEntry; index: number; name: TextSegment[] }[];
 }
 
 function isEditable(el: Element | null): boolean {
@@ -42,8 +43,14 @@ export class SearchBox {
 
   /** Matches are a flat list; the no-match fallback is grouped by Group › Section. */
   readonly groups = computed<OptionGroup[]>(() => {
-    const options = this.options().map((entry, index) => ({ entry, index }));
-    if (!this.result().noMatch) return [{ label: '', options }];
+    const noMatch = this.result().noMatch;
+    const query = this.query();
+    const options = this.options().map((entry, index) => ({
+      entry,
+      index,
+      name: noMatch ? [{ text: entry.name, hit: false }] : splitByRanges(entry.name, matchRanges(query, entry.name)),
+    }));
+    if (!noMatch) return [{ label: '', options }];
     const groups = new Map<string, OptionGroup>();
     for (const option of options) {
       const p = option.entry.path;
@@ -58,6 +65,11 @@ export class SearchBox {
 
   pathOf(entry: SearchEntry): string {
     return entry.path.length === 3 ? `${entry.path[0]} › ${entry.path[1]}` : 'Shortcut';
+  }
+
+  /** Only real pointer movement picks a row, so rows sliding under a still cursor never steal the keyboard's choice. */
+  onOptionMouseMove(index: number): void {
+    if (this.activeIndex() !== index) this.activeIndex.set(index);
   }
 
   onInput(value: string): void {

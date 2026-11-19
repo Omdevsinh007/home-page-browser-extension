@@ -3,6 +3,7 @@ import { FakeStorage } from '../testing/fake-storage';
 import { NotifyService } from './notify.service';
 import { KeyValueStorage } from './storage.service';
 import { UI_PREFS_KEY, UiPrefsService } from './ui-prefs.service';
+import { readSnapshot, writeSnapshot } from '../core/render-snapshot';
 
 function setup(initial: Record<string, unknown> = {}) {
   const fake = new FakeStorage();
@@ -80,5 +81,19 @@ describe('UiPrefsService', () => {
     await prefs.setShortcutStyle('compact');
     expect(prefs.shortcutStyle()).toBe('tiles');
     expect(notify.error).toHaveBeenCalledWith('Could not save the shortcut style.');
+  });
+
+  it('initial style comes from the snapshot', () => {
+    writeSnapshot({ style: 'compact' });
+    const { prefs } = setup();
+    expect(prefs.shortcutStyle()).toBe('compact');
+  });
+
+  it('loaded and chosen styles are written to the snapshot', async () => {
+    const { prefs } = setup({ [UI_PREFS_KEY]: { shortcutStyle: 'compact' } });
+    await prefs.load();
+    expect(readSnapshot()?.style).toBe('compact');
+    await prefs.setShortcutStyle('tiles');
+    expect(readSnapshot()?.style).toBe('tiles');
   });
 });

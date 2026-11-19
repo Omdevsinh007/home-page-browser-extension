@@ -3,24 +3,27 @@
     <a data-testid="pill" class="shortcut-pill glass on-glass" [href]="quickLink().url" [title]="quickLink().name"
       target="_blank" rel="noopener noreferrer" (click)="open($event)" (contextmenu)="openMenu($event)">
       <span class="shortcut-icon"><app-favicon [url]="quickLink().url" [name]="quickLink().name" [displaySize]="16" /></span>
-      <span class="shortcut-name">{{ quickLink().name }}</span>
+      <span class="shortcut-name" elementtiming="tiles">{{ quickLink().name }}</span>
     </a>
   } @else {
     <a matRipple class="shortcut-tile glass on-glass" [href]="quickLink().url" target="_blank" rel="noopener noreferrer"
       (click)="open($event)" (contextmenu)="openMenu($event)">
       <span class="shortcut-icon"><app-favicon [url]="quickLink().url" [name]="quickLink().name" [displaySize]="20" /></span>
-      <p class="shortcut-name" [title]="quickLink().name">{{ quickLink().name }}</p>
+      <p class="shortcut-name" elementtiming="tiles" [title]="quickLink().name">{{ quickLink().name }}</p>
     </a>
   }
 
-  <button type="button" class="shortcut-more" [attr.aria-label]="'Options for ' + quickLink().name" [matMenuTriggerFor]="linkMenu">
+  <button type="button" class="shortcut-more" [attr.aria-label]="'Options for ' + quickLink().name" data-menu-origin #origin ngMenuTrigger #trigger="ngMenuTrigger" [menu]="menu()">
     <mat-icon svgIcon="more_horiz" aria-hidden="true" />
   </button>
 </div>
 
-<mat-menu #linkMenu="matMenu" class="glass-menu">
-  <div (contextmenu)="$event.preventDefault()">
-    <button mat-menu-item (click)="editShortcut.emit()">Edit shortcut</button>
-    <button mat-menu-item class="danger" (click)="removeShortcut.emit()">Delete</button>
+<ng-template [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="trigger.expanded()"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+  <div ngMenu #linkMenu="ngMenu" class="popover-menu" (itemSelected)="onSelected($event)" (contextmenu)="$event.preventDefault()">
+    <ng-template ngMenuContent>
+      <div ngMenuItem class="popover-item" value="edit">Edit shortcut</div>
+      <div ngMenuItem class="popover-item danger" value="delete">Delete</div>
+    </ng-template>
   </div>
-</mat-menu>
+</ng-template>

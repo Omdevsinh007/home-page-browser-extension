@@ -18,14 +18,17 @@
     </button>
   }
 
-  <button type="button" class="shortcut-more" [attr.aria-label]="'Options for ' + quickLink().name" [matMenuTriggerFor]="groupMenu">
+  <button type="button" class="shortcut-more" [attr.aria-label]="'Options for ' + quickLink().name" data-menu-origin #origin ngMenuTrigger #trigger="ngMenuTrigger" [menu]="menu()">
     <mat-icon svgIcon="more_horiz" aria-hidden="true" />
   </button>
 </div>
 
-<mat-menu #groupMenu="matMenu" class="glass-menu">
-  <div (contextmenu)="$event.preventDefault()">
-    <button mat-menu-item (click)="rename.emit()">Rename</button>
-    <button mat-menu-item class="danger" (click)="removeLink.emit()">Delete</button>
+<ng-template [cdkConnectedOverlay]="{ origin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="trigger.expanded()"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+  <div ngMenu #groupMenu="ngMenu" class="popover-menu" (itemSelected)="onSelected($event)" (contextmenu)="$event.preventDefault()">
+    <ng-template ngMenuContent>
+      <div ngMenuItem class="popover-item" value="rename">Rename</div>
+      <div ngMenuItem class="popover-item danger" value="delete">Delete</div>
+    </ng-template>
   </div>
-</mat-menu>
+</ng-template>

@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { provideAppIcons } from '../../core/icons';
 import { ShortcutTile } from '../../core/model';
 import { LinkOpenerService } from '../../services/link-opener.service';
@@ -7,9 +6,15 @@ import { Link } from './link';
 
 const tile = (name = 'Gmail'): ShortcutTile => ({ id: 's1', type: 'Shortcut', name, url: 'https://mail.google.com', position: 0 });
 
+
+/** Every item in a menu starts its label at the same x: all have a leading icon/swatch, or none do. */
+function expectAlignedLeads(items: HTMLElement[]) {
+  const leads = items.map((i) => !!i.querySelector(':scope > mat-icon, :scope > .popover-lead'));
+  expect(leads.every(Boolean) || leads.every((l) => !l)).toBe(true);
+}
+
 describe('Link', () => {
   let fixture: ComponentFixture<Link>;
-  let overlay: HTMLElement;
 
   function create(variant: 'tiles' | 'compact', name?: string) {
     fixture = TestBed.createComponent(Link);
@@ -24,7 +29,6 @@ describe('Link', () => {
       imports: [Link],
       providers: [provideAppIcons(), { provide: LinkOpenerService, useValue: { open: vi.fn() } }],
     }).compileComponents();
-    overlay = TestBed.inject(OverlayContainer).getContainerElement();
   });
 
   it('renders the tile name', () => {
@@ -44,7 +48,7 @@ describe('Link', () => {
     el.querySelector('[data-testid="pill"]')!.dispatchEvent(event);
     fixture.detectChanges();
     expect(event.defaultPrevented).toBe(true);
-    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeTruthy();
+    expect(document.querySelector('[role="menu"]')).toBeTruthy();
   });
 
   it('keyboard menu keys are left to the contextmenu event', () => {
@@ -54,14 +58,14 @@ describe('Link', () => {
     const el = create('tiles');
     el.querySelector('a')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true, bubbles: true, cancelable: true }));
     fixture.detectChanges();
-    expect(overlay.querySelector('.mat-mdc-menu-panel')).toBeNull();
+    expect(document.querySelector('[role="menu"]')).toBeNull();
   });
 
   it('contextmenu inside the open menu is blocked too', () => {
     const el = create('tiles');
     el.querySelector('a')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
-    const item = overlay.querySelector('[mat-menu-item]')!;
+    const item = document.querySelector('[role="menu"] [role^="menuitem"]')!;
     const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
     item.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
@@ -71,7 +75,30 @@ describe('Link', () => {
     const el = create('tiles');
     el.querySelector('a')!.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
-    const items = [...overlay.querySelectorAll('[mat-menu-item]')].map((b) => b.textContent!.trim());
+    const items = [...document.querySelectorAll('[role="menu"] [role^="menuitem"]')].map((b) => b.textContent!.trim());
     expect(items).toEqual(['Edit shortcut', 'Delete']);
+    expectAlignedLeads([...document.querySelectorAll<HTMLElement>('[role="menu"] [role^="menuitem"]')]);
+  });
+
+  it('choosing Delete in the menu emits removeShortcut', async () => {
+    const el = create('tiles');
+    const spy = vi.fn();
+    fixture.componentInstance.removeShortcut.subscribe(spy);
+    (el.querySelector('.shortcut-more') as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const target = [...document.querySelectorAll<HTMLElement>('[role="menu"] [role^="menuitem"]')].find((i) => i.textContent!.trim() === 'Delete')!;
+    target.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+  });
+
+  it('drops the menu from the options button', () => {
+    const el = create('tiles');
+    (el.querySelector('.shortcut-more') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('.shortcut-more')!.hasAttribute('data-menu-origin')).toBe(true);
+    expect(el.querySelector('.shortcut')!.hasAttribute('data-menu-origin')).toBe(false);
   });
 });

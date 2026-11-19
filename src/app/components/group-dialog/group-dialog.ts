@@ -1,8 +1,10 @@
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@angular/aria/menu';
+import { POPOVER_VIEWPORT_MARGIN, TILE_MENU_POSITIONS } from '../../core/popover';
 import { firstValueFrom } from 'rxjs';
 import { GroupTile } from '../../core/model';
 import { renumber } from '../../core/positions';
@@ -20,7 +22,7 @@ export interface GroupDialogData {
 /** A group's sections as side-by-side columns (spec §5). Reads the group live from the store. */
 @Component({
   selector: 'app-group-dialog',
-  imports: [MatMenuModule, MatIcon, CdkDropList, CdkDropListGroup, CdkDrag, SectionColumn],
+  imports: [OverlayModule, Menu, MenuContent, MenuItem, MenuTrigger, MatIcon, CdkDropList, CdkDropListGroup, CdkDrag, SectionColumn],
   templateUrl: './group-dialog.html',
   styleUrl: './group-dialog.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +51,17 @@ export class GroupDialog {
   async addSection(): Promise<void> {
     const name = await this.askName({ title: 'Add section', label: 'Section name', confirmText: 'Add' });
     if (name) await this.change((g) => addSection(g, name));
+  }
+
+  /** Menus drop from their button, right edges aligned (same as the tile menus). */
+  readonly positions = TILE_MENU_POSITIONS;
+  readonly margin = POPOVER_VIEWPORT_MARGIN;
+  readonly groupMenu = viewChild<Menu<string>>('groupMenu');
+
+  onOptionSelected(value: string | undefined): void {
+    if (value === 'rename') void this.renameGroup();
+    else if (value === 'delete') void this.deleteGroup();
+    else if (value?.startsWith('move:')) void this.moveSectionBy(value.slice(5), -1);
   }
 
   async moveSectionBy(sectionId: string, delta: number): Promise<void> {

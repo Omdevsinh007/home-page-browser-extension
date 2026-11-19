@@ -16,9 +16,15 @@
   border-color: var(--glass-stroke-focus);
 }
 
+/* The pill shows focus; the input itself never draws the browser's focus box. */
+.search-field:has(input:focus-visible) {
+  box-shadow: var(--glass-highlight), var(--glass-shadow), 0 0 0 1px var(--glass-stroke-focus);
+}
+
 .search-field input {
   color: var(--text);
   text-shadow: var(--text-on-glass-shadow);
+  outline: none;
 }
 
 .search-field input::placeholder {
@@ -45,7 +51,7 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 .results {
-  background: var(--glass-fill-dark);
+  background: var(--glass-fill-results);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
   border: var(--glass-stroke);
@@ -53,8 +59,27 @@ input[type='search']::-webkit-search-cancel-button {
   border-radius: var(--radius-popover);
 }
 
+.option {
+  border-radius: var(--radius-result-row);
+}
+
 .option.active {
   background: var(--glass-fill-strong);
+  box-shadow: inset 0 0 0 0.5px var(--glass-stroke-focus);
+}
+
+/* Matched letters stand out in full white; the rest of the name steps back a little. */
+.option-name {
+  color: var(--text-dim);
+}
+
+.option-name .hit {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.option.active .option-name {
+  color: var(--text);
 }
 
 .custom-scroll::-webkit-scrollbar {

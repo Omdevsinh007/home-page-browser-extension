@@ -34,7 +34,7 @@
         <button type="button" class="dialog-icon-btn" aria-label="Add section" (click)="addSection()">
           <mat-icon svgIcon="playlist_add" />
         </button>
-        <button type="button" class="dialog-icon-btn" aria-label="Group options" [matMenuTriggerFor]="groupMenu">
+        <button type="button" class="dialog-icon-btn" aria-label="Group options" ngMenuTrigger #optionsOrigin #optionsTrigger="ngMenuTrigger" [menu]="groupMenu()">
           <mat-icon svgIcon="more_vert" />
         </button>
         <button type="button" class="dialog-icon-btn" aria-label="Close" (click)="close()">
@@ -68,12 +68,17 @@
   </div>
 </div>
 
-<mat-menu #groupMenu="matMenu" class="glass-menu">
-  <button mat-menu-item (click)="renameGroup()">Rename group</button>
-  @for (section of sections(); track section.id; let i = $index) {
-    @if (i > 0) {
-      <button mat-menu-item (click)="moveSectionBy(section.id, -1)">Move “{{ section.name }}” left</button>
-    }
-  }
-  <button mat-menu-item class="danger" (click)="deleteGroup()">Delete group</button>
-</mat-menu>
+<ng-template [cdkConnectedOverlay]="{ origin: optionsOrigin, usePopover: 'inline' }" [cdkConnectedOverlayOpen]="optionsTrigger.expanded()"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="margin" cdkAttachPopoverAsChild>
+  <div ngMenu #groupMenu="ngMenu" class="popover-menu" (itemSelected)="onOptionSelected($event)">
+    <ng-template ngMenuContent>
+      <div ngMenuItem class="popover-item" value="rename">Rename group</div>
+      @for (section of sections(); track section.id; let i = $index) {
+        @if (i > 0) {
+          <div ngMenuItem class="popover-item" [value]="'move:' + section.id">Move “{{ section.name }}” left</div>
+        }
+      }
+      <div ngMenuItem class="popover-item danger" value="delete">Delete group</div>
+    </ng-template>
+  </div>
+</ng-template>

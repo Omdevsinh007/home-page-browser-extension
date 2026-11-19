@@ -94,10 +94,11 @@
 }
 
 /* ── "⋯" menu button ── */
+/* Centred on the tile corner's curve: radius 22 - half the 24px button = 10px in from each edge. */
 .shortcut-more {
   position: absolute;
-  top: 4px;
-  right: 6px;
+  top: 10px;
+  right: 10px;
   width: 24px;
   height: 24px;
   border: 0;
@@ -150,8 +151,9 @@
 
 .shortcut.is-compact .shortcut-more {
   transition: opacity 150ms ease, background var(--transition-smooth);
+  /* Centred in the pill's end cap: (40 - 24) / 2 = 8px from top and end. */
   top: 8px;
-  right: 6px;
+  right: 8px;
   opacity: 0;
   background: var(--glass-fill-dark);
 }
@@ -163,4 +165,21 @@
 
 .shortcut-add {
   background: var(--glass-fill-faint, var(--glass-fill));
+}
+
+/* Each tile repaints on its own (hover, ripple), without invalidating its neighbours. */
+.shortcut-tile.glass,
+.shortcut-pill.glass {
+  contain: paint;
+}
+
+/*
+ * Over the built-in wallpapers tiles skip the backdrop blur. Chrome redraws a tile's backdrop-filter in
+ * patches, which shows as light strips on a colourful wallpaper (confirmed by toggling it off), and blurring an
+ * already smooth gradient changes almost nothing. Over the user's own photo the blur stays for legibility.
+ */
+html:not([data-wallpaper='upload']) .shortcut-tile.glass,
+html:not([data-wallpaper='upload']) .shortcut-pill.glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

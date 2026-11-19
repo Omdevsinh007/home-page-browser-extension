@@ -12,12 +12,16 @@ import { KeyValueStorage } from './services/storage.service';
 import { UI_PREFS_KEY } from './services/ui-prefs.service';
 import { FakeStorage } from './testing/fake-storage';
 import { storeHarness } from './testing/store-harness';
+import { writeSnapshot } from './core/render-snapshot';
+import { TopItem } from './core/model';
+import { KEYS } from './services/links-store';
 
 /** Saved data for the sample items, captured from a real LinksStore write. */
 async function savedSample(): Promise<Record<string, unknown>> {
   const { fake } = await storeHarness();
   const data = structuredClone(fake.data);
   TestBed.resetTestingModule();
+  localStorage.clear(); // the harness's save wrote a render snapshot
   return data;
 }
 
@@ -57,7 +61,7 @@ describe('App background video', () => {
     const meta = { id: 'v', name: 'v.mp4', type: 'video', isActive: true, objectFit: 'cover', brightness: 100, blur: 0, order: 0 };
     configure(await savedSample());
     TestBed.overrideProvider(BackgroundStore, {
-      useValue: { active: signal({ meta, objectUrl: 'blob:v' }), list: signal([meta]), load: async () => undefined },
+      useValue: { active: signal({ meta, objectUrl: 'blob:v' }), list: signal([meta]), shown: signal('upload'), motion: signal(true), load: async () => undefined },
     });
     const fixture = TestBed.createComponent(App);
     await settle(fixture);
@@ -124,6 +128,21 @@ describe('App', () => {
     release();
   });
 
+  it('tiles render while loading when a snapshot exists; Add is disabled', async () => {
+    const data = await savedSample();
+    const fake = configure(data);
+    writeSnapshot({ items: (data[KEYS.v2] as { data: TopItem[] }).data });
+    const release = fake.holdGets();
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="shortcuts"]')).toBeTruthy();
+    expect(el.querySelector<HTMLButtonElement>('button[aria-label="Add shortcut or group"]')!.disabled).toBe(true);
+    release();
+    await settle(fixture);
+    expect(el.querySelector<HTMLButtonElement>('button[aria-label="Add shortcut or group"]')!.disabled).toBe(false);
+  });
+
   it('switches to compact pills', async () => {
     const data = await savedSample();
     configure({ ...data, [UI_PREFS_KEY]: { shortcutStyle: 'compact' } });
@@ -132,10 +151,98 @@ describe('App', () => {
     expect(el.querySelectorAll('[data-testid="pill"]').length).toBe(TestBed.inject(LinksStore).items().length);
   });
 
+  it('syncs html[data-wallpaper] with the shown wallpaper', async () => {
+    configure(await savedSample());
+    const shown = signal<string>('dusk');
+    const motion = signal(true);
+    TestBed.overrideProvider(BackgroundStore, {
+      useValue: { active: signal(null), list: signal([]), shown, motion, load: async () => undefined },
+    });
+    const fixture = TestBed.createComponent(App);
+    await settle(fixture);
+    expect(document.documentElement.dataset['wallpaper']).toBe('dusk');
+    shown.set('upload');
+    await settle(fixture);
+    expect(document.documentElement.dataset['wallpaper']).toBe('upload');
+    expect(document.documentElement.dataset['motion']).toBe('on');
+    motion.set(false);
+    await settle(fixture);
+    expect(document.documentElement.dataset['motion']).toBe('off');
+  });
+
+  it('going back from Backgrounds reopens Settings', async () => {
+    configure(await savedSample());
+    const fixture = TestBed.createComponent(App);
+    await settle(fixture);
+    const open = TestBed.inject(MatDialog).open as unknown as ReturnType<typeof vi.fn>;
+    open.mockReturnValueOnce({ afterClosed: () => of('back'), close: vi.fn() });
+    await fixture.componentInstance.openBackgrounds();
+    expect(fixture.componentInstance.settingsOpen()).toBe(true);
+  });
+
+  it('closing Backgrounds normally leaves Settings closed', async () => {
+    configure(await savedSample());
+    const fixture = TestBed.createComponent(App);
+    await settle(fixture);
+    await fixture.componentInstance.openBackgrounds();
+    expect(fixture.componentInstance.settingsOpen()).toBe(false);
+  });
+
   it('has one settings button and no other corner buttons', async () => {
     configure(await savedSample());
     const el = await settle(TestBed.createComponent(App));
     expect(el.querySelectorAll('button[aria-label="Settings"]').length).toBe(1);
     expect(el.querySelector('button[aria-label="Backgrounds"]')).toBeNull();
+  });
+
+  describe('Add menu', () => {
+    async function openAdd() {
+      configure(await savedSample());
+      const fixture = TestBed.createComponent(App);
+      const el = await settle(fixture);
+      const add = el.querySelector<HTMLButtonElement>('button[aria-label="Add shortcut or group"]')!;
+      add.focus();
+      add.click();
+      await settle(fixture);
+      return { fixture, add };
+    }
+    const menu = () => document.querySelector<HTMLElement>('[role="menu"]');
+    const items = () => [...document.querySelectorAll<HTMLElement>('[role="menu"] [role^="menuitem"]')];
+
+    it('Add opens a menu with Add shortcut and Add group', async () => {
+      const { add } = await openAdd();
+      expect(menu()).toBeTruthy();
+      expect(items().map((i) => i.textContent!.trim())).toEqual(['Add shortcut', 'Add group']);
+      expect(add.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('Escape closes the Add menu and returns focus to Add', async () => {
+      const { fixture, add } = await openAdd();
+      items()[0].focus();
+      menu()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await settle(fixture);
+      expect(menu()).toBeNull();
+      expect(document.activeElement).toBe(add);
+    });
+
+    it('closes the menu before the dialog opens', async () => {
+      const { fixture, add } = await openAdd();
+      items()[1].click();
+      await settle(fixture);
+      expect(menu()).toBeNull();
+      expect(TestBed.inject(MatDialog).open).toHaveBeenCalled();
+      expect(document.activeElement).toBe(add);
+    });
+
+    it('drops the Add menu from the + icon, not the whole tile', async () => {
+      const { add } = await openAdd();
+      expect(add.querySelector('.shortcut-icon')!.hasAttribute('data-menu-origin')).toBe(true);
+      expect(add.hasAttribute('data-menu-origin')).toBe(false);
+    });
+
+    it('opens the Add menu centred below the + icon', async () => {
+      await openAdd();
+      expect(menu()!.closest('.cdk-overlay-pane')!.classList.contains('placement-below')).toBe(true);
+    });
   });
 });

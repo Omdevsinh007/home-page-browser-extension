@@ -11,7 +11,8 @@
 
 .content-wrap {
   position: relative;
-  background-color: var(--page-bg);
+  /* Transparent: the wallpaper is the body background (styles/wallpapers.css). */
+  background-color: transparent;
   width: 100%;
   height: 100dvh;
   overflow: hidden;
@@ -143,11 +144,13 @@
   cursor: pointer;
 }
 
+.settings-trigger:hover,
+.settings-trigger[aria-expanded='true'] {
+  background: var(--glass-fill-strong);
+}
+
 .settings-trigger mat-icon {
   width: 20px;
   height: 20px;
 }
 
-::ng-deep .mat-mdc-menu-content {
-  padding: 0 !important;
-}
